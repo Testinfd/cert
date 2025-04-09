@@ -19,12 +19,6 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
-    <button id="darkModeToggle" class="dark-mode-toggle" aria-label="Toggle Dark Mode">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-        </svg>
-    </button>
-    
     <header>
         <h1 class="site-title">Advanced Announcement Generator</h1>
         <p class="site-description">Create professional announcements with multiple templates and export options</p>
@@ -50,8 +44,23 @@
                         <option value="formal">Formal</option>
                         <option value="elegant">Elegant</option>
                         <option value="modern">Modern</option>
-                        <option value="festive">Festive</option>
                         <option value="minimal">Minimal</option>
+                        <option value="festive">Festive</option>
+                        <option value="corporate">Corporate</option>
+                        <option value="gradient">Gradient</option>
+                        <option value="brutalist">Brutalist</option>
+                        <option value="glassmorphism">Glassmorphism</option>
+                    </select>
+                </div>
+                
+                <!-- Layout Selection -->
+                <div class="control-group">
+                    <label for="layoutSelector">Layout Style</label>
+                    <select id="layoutSelector" name="layout">
+                        <option value="default">Default</option>
+                        <option value="centered">Centered</option>
+                        <option value="split">Split</option>
+                        <option value="card">Card</option>
                     </select>
                 </div>
                 
@@ -150,6 +159,24 @@
                             <div style="background-color: #88292f;"></div>
                         </div>
                         <div class="color-name">Wine</div>
+                    </div>
+                    
+                    <div class="color-option" data-theme="monochrome" data-primary="#222222" data-secondary="#666666" data-accent="#999999">
+                        <div class="color-preview">
+                            <div style="background-color: #222222;"></div>
+                            <div style="background-color: #666666;"></div>
+                            <div style="background-color: #999999;"></div>
+                        </div>
+                        <div class="color-name">Mono</div>
+                    </div>
+                    
+                    <div class="color-option" data-theme="pastel" data-primary="#6b9080" data-secondary="#f6aa1c" data-accent="#a4c3b2">
+                        <div class="color-preview">
+                            <div style="background-color: #6b9080;"></div>
+                            <div style="background-color: #f6aa1c;"></div>
+                            <div style="background-color: #a4c3b2;"></div>
+                        </div>
+                        <div class="color-name">Pastel</div>
                     </div>
                 </div>
                 
@@ -292,29 +319,22 @@
                 });
             }
             
-            // Dark mode toggle
-            const darkModeToggle = document.getElementById('darkModeToggle');
-            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
-            
-            // Check for saved theme preference or use the system preference
-            const savedTheme = localStorage.getItem('theme');
-            if (savedTheme === 'dark') {
-                document.body.classList.add('dark-mode');
-            } else if (savedTheme === 'light') {
-                document.body.classList.remove('dark-mode');
-            } else if (prefersDarkScheme.matches) {
-                document.body.classList.add('dark-mode');
+            // Layout selector
+            const layoutSelector = document.getElementById('layoutSelector');
+            if (layoutSelector) {
+                layoutSelector.addEventListener('change', function() {
+                    const layoutValue = this.value;
+                    const preview = document.querySelector('.announcement-preview');
+                    
+                    // Remove all layout classes
+                    preview.classList.remove('layout-centered', 'layout-split', 'layout-card');
+                    
+                    // Add the selected layout class if not default
+                    if (layoutValue !== 'default') {
+                        preview.classList.add('layout-' + layoutValue);
+                    }
+                });
             }
-            
-            // Toggle dark mode
-            darkModeToggle.addEventListener('click', function() {
-                document.body.classList.toggle('dark-mode');
-                if (document.body.classList.contains('dark-mode')) {
-                    localStorage.setItem('theme', 'dark');
-                } else {
-                    localStorage.setItem('theme', 'light');
-                }
-            });
         });
     </script>
 </body>
