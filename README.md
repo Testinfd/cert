@@ -15,7 +15,7 @@ A versatile and powerful tool for creating professional announcements, notices, 
 
 ## Getting Started
 
-1. Visit the [Advanced Announcement Generator](https://your-github-username.github.io/announcement-generator/) website
+1. Visit the [Advanced Announcement Generator](https://testinfd.github.io/cert/) website
 2. Choose a template style and content preset
 3. Customize the content, colors, and layout
 4. Download or print your announcement
@@ -26,12 +26,12 @@ To run this project locally:
 
 1. Clone the repository:
    ```
-   git clone https://github.com/your-github-username/announcement-generator.git
+   git clone https://github.com/Testinfd/cert.git
    ```
 
 2. Navigate to the project directory:
    ```
-   cd announcement-generator
+   cd cert
    ```
 
 3. Open `index.html` in your browser or use a local server.
@@ -43,7 +43,7 @@ This project is designed to be easily deployed to GitHub Pages:
 1. Push your changes to your GitHub repository
 2. Go to repository Settings > Pages
 3. Select the branch you want to deploy (usually `main`)
-4. Your site will be published at `https://your-github-username.github.io/announcement-generator/`
+4. Your site will be published at `https://testinfd.github.io/cert/`
 
 ## Technologies Used
 
