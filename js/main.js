@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // Global variables
 let currentLanguage = 'english';
 let currentTemplate = 'standard';
+let currentLayout = 'default';
 let customLogoLoaded = false;
 
 // Initialize key DOM elements
@@ -52,6 +53,16 @@ function addEventListeners() {
         templateSelector.addEventListener('change', function() {
             currentTemplate = this.value;
             applyTemplate(currentTemplate);
+            updatePreview();
+        });
+    }
+    
+    // Layout selector
+    const layoutSelector = document.getElementById('layoutSelector');
+    if (layoutSelector) {
+        layoutSelector.addEventListener('change', function() {
+            currentLayout = this.value;
+            applyLayout(currentLayout);
             updatePreview();
         });
     }
@@ -126,6 +137,13 @@ function initializeTemplates() {
         currentTemplate = templateSelector.value;
         applyTemplate(currentTemplate);
     }
+    
+    // Add layout class to preview container based on selected layout
+    const layoutSelector = document.getElementById('layoutSelector');
+    if (layoutSelector) {
+        currentLayout = layoutSelector.value;
+        applyLayout(currentLayout);
+    }
 }
 
 // Apply template class to preview
@@ -134,10 +152,30 @@ function applyTemplate(template) {
     if (!previewContainer) return;
     
     // Remove all template classes
-    previewContainer.classList.remove('template-standard', 'template-formal', 'template-elegant', 'template-modern');
+    Object.keys(templates).forEach(template => {
+        previewContainer.classList.remove(`template-${template}`);
+    });
     
     // Add selected template class
     previewContainer.classList.add(`template-${template}`);
+}
+
+// Apply layout class to preview
+function applyLayout(layout) {
+    const previewContainer = document.querySelector('.announcement-preview');
+    if (!previewContainer) return;
+    
+    // Remove all layout classes
+    Object.keys(layouts).forEach(layoutKey => {
+        if (layoutKey !== 'default') {
+            previewContainer.classList.remove(`layout-${layoutKey}`);
+        }
+    });
+    
+    // Add selected layout class if not default
+    if (layout !== 'default') {
+        previewContainer.classList.add(`layout-${layout}`);
+    }
 }
 
 // Set default values
@@ -169,7 +207,7 @@ function resetForm() {
         // Reset logo
         const logoEl = document.getElementById('announcementLogo');
         if (logoEl) {
-            logoEl.innerHTML = document.getElementById('logoTextInput').value || 'PA';
+            logoEl.innerHTML = document.getElementById('logoTextInput').value || 'RB';
             logoEl.classList.remove('has-image');
             customLogoLoaded = false;
         }
@@ -180,6 +218,14 @@ function resetForm() {
             templateSelector.value = 'standard';
             currentTemplate = 'standard';
             applyTemplate('standard');
+        }
+        
+        // Reset layout
+        const layoutSelector = document.getElementById('layoutSelector');
+        if (layoutSelector) {
+            layoutSelector.value = 'default';
+            currentLayout = 'default';
+            applyLayout('default');
         }
         
         // Reset colors to default

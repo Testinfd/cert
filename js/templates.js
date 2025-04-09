@@ -72,7 +72,7 @@ const templates = {
         name: 'Festive',
         fonts: [
             'Poppins',
-            'Great Vibes'
+            'Raleway'
         ],
         colors: {
             primary: '#5c2a9d',
@@ -80,9 +80,10 @@ const templates = {
             accent: '#0a81ab'
         },
         styles: {
-            background: '#ffffff',
+            background: '#fffbf4',
             padding: '50px',
-            border: '5px solid #fdca40'
+            position: 'relative',
+            overflow: 'hidden'
         }
     },
     minimal: {
@@ -98,8 +99,80 @@ const templates = {
         },
         styles: {
             background: '#ffffff',
+            padding: '60px',
+            border: '1px solid #eeeeee',
+            boxShadow: 'none'
+        }
+    },
+    corporate: {
+        name: 'Corporate',
+        fonts: [
+            'Montserrat',
+            'Inter'
+        ],
+        colors: {
+            primary: '#1c273c',
+            secondary: '#3d7b90',
+            accent: '#5c93a7'
+        },
+        styles: {
+            background: '#ffffff',
             padding: '50px',
-            border: '1px solid #eeeeee'
+            borderLeft: '5px solid #1c273c'
+        }
+    },
+    gradient: {
+        name: 'Gradient',
+        fonts: [
+            'Poppins',
+            'Inter'
+        ],
+        colors: {
+            primary: '#3a1c71',
+            secondary: '#d76d77',
+            accent: '#ffaf7b'
+        },
+        styles: {
+            background: 'linear-gradient(135deg, #ffffff 0%, #f5f7fa 100%)',
+            padding: '50px'
+        }
+    },
+    brutalist: {
+        name: 'Brutalist',
+        fonts: [
+            'Space Grotesk',
+            'Inter'
+        ],
+        colors: {
+            primary: '#000000',
+            secondary: '#000000',
+            accent: '#000000'
+        },
+        styles: {
+            background: '#f0f0f0',
+            padding: '50px',
+            border: '3px solid #000000',
+            boxShadow: '10px 10px 0 rgba(0,0,0,0.9)'
+        }
+    },
+    glassmorphism: {
+        name: 'Glassmorphism',
+        fonts: [
+            'Inter',
+            'Poppins'
+        ],
+        colors: {
+            primary: '#3a1c71',
+            secondary: '#d76d77',
+            accent: '#ffaf7b'
+        },
+        styles: {
+            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.4))',
+            padding: '50px',
+            backdropFilter: 'blur(10px)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            position: 'relative',
+            overflow: 'hidden'
         }
     }
 };
@@ -143,6 +216,24 @@ const colorThemes = [
         }
     },
     {
+        name: 'Monochrome',
+        id: 'monochrome',
+        colors: {
+            primary: '#222222',
+            secondary: '#666666',
+            accent: '#999999'
+        }
+    },
+    {
+        name: 'Pastel',
+        id: 'pastel',
+        colors: {
+            primary: '#6b9080',
+            secondary: '#f6aa1c',
+            accent: '#a4c3b2'
+        }
+    },
+    {
         name: 'Slate',
         id: 'slate',
         colors: {
@@ -179,6 +270,26 @@ const colorThemes = [
         }
     }
 ];
+
+// Layout configurations
+const layouts = {
+    default: {
+        name: 'Default',
+        className: ''
+    },
+    centered: {
+        name: 'Centered',
+        className: 'layout-centered'
+    },
+    split: {
+        name: 'Split',
+        className: 'layout-split'
+    },
+    card: {
+        name: 'Card',
+        className: 'layout-card'
+    }
+};
 
 // Template presets with pre-populated content
 const templatePresets = {
