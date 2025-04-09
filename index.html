@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Announcement Generator | Pragati Assam</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="images/pragati.png" type="image/png">
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Assamese:wght@100..900&family=Cormorant+Garamond:wght@300;400;500;600;700&family=Montserrat:wght@100..900&family=Raleway:wght@100..700&family=Great+Vibes&family=Inter:wght@200..900&family=Poppins:wght@300;400;500;600;700&family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/styles.css">
+    
+    <!-- Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+    <header>
+        <h1 class="site-title">Advanced Announcement Generator</h1>
+        <p class="site-description">Create professional announcements with multiple templates and export options</p>
+    </header>
+    
+    <div class="container">
+        <!-- Controls Section -->
+        <div class="controls">
+            <form id="announcementForm">
+                <h2>Announcement Settings</h2>
+                
+                <!-- Language Toggle -->
+                <div class="language-toggle">
+                    <div class="language-option active" data-lang="english">English</div>
+                    <div class="language-option" data-lang="assamese">Assamese (অসমীয়া)</div>
+                </div>
+                
+                <!-- Template Selection -->
+                <div class="control-group">
+                    <label for="templateSelector">Template Style</label>
+                    <select id="templateSelector" name="template">
+                        <option value="standard">Standard</option>
+                        <option value="formal">Formal</option>
+                        <option value="elegant">Elegant</option>
+                        <option value="modern">Modern</option>
+                        <option value="festive">Festive</option>
+                        <option value="minimal">Minimal</option>
+                    </select>
+                </div>
+                
+                <!-- Preset Templates -->
+                <div class="control-group">
+                    <label for="presetSelector">Preset Content</label>
+                    <select id="presetSelector" name="preset">
+                        <option value="">-- Select a preset --</option>
+                        <option value="event">Event Announcement</option>
+                        <option value="meeting">Meeting Notice</option>
+                        <option value="general">General Announcement</option>
+                        <option value="holiday">Holiday Announcement</option>
+                        <option value="achievement">Achievement Announcement</option>
+                    </select>
+                </div>
+                
+                <!-- Logo Settings -->
+                <div class="control-group">
+                    <label for="logoUpload">Upload Logo (optional)</label>
+                    <input type="file" id="logoUpload" name="logo" accept="image/*">
+                </div>
+                
+                <div class="control-group">
+                    <label for="logoTextInput">Logo Text (if no image)</label>
+                    <input type="text" id="logoTextInput" name="logoText" placeholder="PA" maxlength="3">
+                </div>
+                
+                <!-- Basic Information -->
+                <div class="control-group">
+                    <label for="titleInput">Announcement Title</label>
+                    <input type="text" id="titleInput" name="title" placeholder="Announcement Title">
+                </div>
+                
+                <div class="control-group">
+                    <label for="dateInput">Date</label>
+                    <input type="date" id="dateInput" name="date">
+                </div>
+                
+                <div class="control-group">
+                    <label for="contentInput">Announcement Content</label>
+                    <textarea id="contentInput" name="content" placeholder="Write your announcement content here..."></textarea>
+                </div>
+                
+                <!-- Signatory Information -->
+                <div class="control-row">
+                    <div class="control-group">
+                        <label for="signerNameInput">Signer Name</label>
+                        <input type="text" id="signerNameInput" name="signerName" placeholder="John Doe">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="signerTitleInput">Signer Title</label>
+                        <input type="text" id="signerTitleInput" name="signerTitle" placeholder="Director">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <label for="contactInfoInput">Contact Information</label>
+                    <input type="text" id="contactInfoInput" name="contactInfo" placeholder="Email: example@email.com | Phone: 555-1234">
+                </div>
+                
+                <!-- Color Settings -->
+                <h3>Color Theme</h3>
+                <div class="theme-options">
+                    <div class="color-option selected" data-theme="default" data-primary="#2a3b4c" data-secondary="#ce8e2c" data-accent="#134e65">
+                        <div class="color-preview">
+                            <div style="background-color: #2a3b4c;"></div>
+                            <div style="background-color: #ce8e2c;"></div>
+                            <div style="background-color: #134e65;"></div>
+                        </div>
+                        <div class="color-name">Default</div>
+                    </div>
+                    
+                    <div class="color-option" data-theme="navy-gold" data-primary="#0c2340" data-secondary="#b4975a" data-accent="#1d4e8f">
+                        <div class="color-preview">
+                            <div style="background-color: #0c2340;"></div>
+                            <div style="background-color: #b4975a;"></div>
+                            <div style="background-color: #1d4e8f;"></div>
+                        </div>
+                        <div class="color-name">Navy Gold</div>
+                    </div>
+                    
+                    <div class="color-option" data-theme="forest" data-primary="#2c3e50" data-secondary="#27ae60" data-accent="#16a085">
+                        <div class="color-preview">
+                            <div style="background-color: #2c3e50;"></div>
+                            <div style="background-color: #27ae60;"></div>
+                            <div style="background-color: #16a085;"></div>
+                        </div>
+                        <div class="color-name">Forest</div>
+                    </div>
+                    
+                    <div class="color-option" data-theme="wine" data-primary="#591c21" data-secondary="#a39171" data-accent="#88292f">
+                        <div class="color-preview">
+                            <div style="background-color: #591c21;"></div>
+                            <div style="background-color: #a39171;"></div>
+                            <div style="background-color: #88292f;"></div>
+                        </div>
+                        <div class="color-name">Wine</div>
+                    </div>
+                </div>
+                
+                <div class="control-row" style="margin-top: 15px;">
+                    <div class="control-group">
+                        <label for="primaryColor">Primary Color</label>
+                        <input type="color" id="primaryColor" data-target="primary" value="#2a3b4c">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="secondaryColor">Secondary Color</label>
+                        <input type="color" id="secondaryColor" data-target="secondary" value="#ce8e2c">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="accentColor">Accent Color</label>
+                        <input type="color" id="accentColor" data-target="accent" value="#134e65">
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="control-actions">
+                    <button type="button" id="downloadPng" class="button">Download as PNG</button>
+                    <button type="button" id="downloadPdf" class="button">Download as PDF</button>
+                    <button type="button" id="printBtn" class="button">Print</button>
+                    <button type="button" id="saveDataBtn" class="button">Save Data</button>
+                    <button type="button" id="loadDataBtn" class="button">Load Data</button>
+                    <button type="button" id="resetForm" class="button">Reset</button>
+                </div>
+                
+                <!-- Hidden file input for loading saved data -->
+                <input type="file" id="loadDataInput" accept=".json" style="display: none;">
+            </form>
+        </div>
+        
+        <!-- Preview Section -->
+        <div class="preview-container">
+            <div class="announcement-preview">
+                <div class="announcement-notice" id="noticeType">NOTICE</div>
+                
+                <div class="announcement-header">
+                    <div class="announcement-logo" id="announcementLogo">PA</div>
+                    
+                    <div class="announcement-heading">
+                        <h2 class="announcement-title" id="announcementTitle">Announcement Title</h2>
+                        <div class="announcement-date" id="announcementDate">Date: January 1, 2023</div>
+                    </div>
+                </div>
+                
+                <div class="announcement-body">
+                    <div class="announcement-content" id="announcementContent">
+                        This is a sample announcement content. Replace this with your actual announcement text.
+                    </div>
+                </div>
+                
+                <div class="announcement-footer">
+                    <div class="signature-area">
+                        <div class="signature">
+                            <div class="signature-line"></div>
+                            <div class="signer-name" id="signerName">John Doe</div>
+                            <div class="signer-title" id="signerTitle">Director</div>
+                        </div>
+                    </div>
+                    
+                    <div class="contact-info" id="contactInfo">
+                        Email: example@email.com | Phone: 555-1234
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <p>&copy; <span id="currentYear">2023</span> Pragati Assam. All rights reserved.</p>
+        <p>Version 2.0</p>
+    </footer>
+    
+    <!-- JavaScript -->
+    <script src="js/templates.js"></script>
+    <script src="js/export.js"></script>
+    <script src="js/main.js"></script>
+    
+    <script>
+        // Set current year in footer
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
+        
+        // Additional event listeners not in main.js
+        document.addEventListener('DOMContentLoaded', function() {
+            // Preset selector
+            const presetSelector = document.getElementById('presetSelector');
+            if (presetSelector) {
+                presetSelector.addEventListener('change', function() {
+                    if (this.value) {
+                        loadTemplatePreset(this.value);
+                    }
+                });
+            }
+            
+            // Print button
+            const printBtn = document.getElementById('printBtn');
+            if (printBtn) {
+                printBtn.addEventListener('click', function() {
+                    exportAsPrintableHTML();
+                });
+            }
+            
+            // Save data button
+            const saveDataBtn = document.getElementById('saveDataBtn');
+            if (saveDataBtn) {
+                saveDataBtn.addEventListener('click', function() {
+                    const data = getCurrentFormData();
+                    exportAsJSON(data);
+                });
+            }
+            
+            // Load data button and hidden file input
+            const loadDataBtn = document.getElementById('loadDataBtn');
+            const loadDataInput = document.getElementById('loadDataInput');
+            
+            if (loadDataBtn && loadDataInput) {
+                loadDataBtn.addEventListener('click', function() {
+                    loadDataInput.click();
+                });
+                
+                loadDataInput.addEventListener('change', async function(event) {
+                    if (event.target.files.length > 0) {
+                        try {
+                            showLoading();
+                            const data = await importFromJSON(event.target.files[0]);
+                            applyImportedData(data);
+                        } catch (error) {
+                            console.error('Error importing data:', error);
+                            showToast('Error importing data. Please check the file format.', true);
+                        } finally {
+                            hideLoading();
+                            // Reset the file input for future uploads
+                            this.value = '';
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
