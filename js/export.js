@@ -90,52 +90,49 @@ async function exportAsPDF(previewElement, filename = 'announcement.pdf') {
     }
 }
 
-// Export announcement data as JSON
-function exportAsJSON(formData, filename = 'announcement-data.json') {
+// Export announcement as JSON
+function exportAsJSON(data) {
     try {
-        // Convert form data to JSON string
-        const jsonStr = JSON.stringify(formData, null, 2);
+        console.log('Exporting as JSON:', data);
+        // Convert the form data to a JSON string
+        const jsonString = JSON.stringify(data, null, 2);
         
-        // Create and trigger download
-        const blob = new Blob([jsonStr], {type: 'application/json'});
+        // Create a blob with the JSON data
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        
+        // Create a URL for the blob
         const url = URL.createObjectURL(blob);
+        
+        // Create a download link and trigger the download
         const link = document.createElement('a');
         link.href = url;
-        link.download = filename || `announcement-data-${getCurrentDateString()}.json`;
+        link.download = `announcement-${getCurrentDateString()}.json`;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+        
+        // Clean up the URL object
         URL.revokeObjectURL(url);
         
-        // Show success notification
-        showToast('Announcement data exported successfully!');
-        return true;
+        showToast('Announcement data saved successfully!');
     } catch (error) {
-        console.error('Error exporting as JSON:', error);
-        showToast('Error exporting data. Please try again.', true);
-        return false;
+        console.error('Error exporting to JSON:', error);
+        showToast('Error saving data. Please try again.', true);
     }
 }
 
-// Import announcement data from JSON file
-function importFromJSON(file) {
+// Import announcement from JSON file
+async function importFromJSON(file) {
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         
         reader.onload = function(event) {
             try {
-                // Parse JSON data
                 const data = JSON.parse(event.target.result);
-                
-                // Validate data structure
-                if (!data || typeof data !== 'object') {
-                    throw new Error('Invalid data format');
-                }
-                
                 resolve(data);
             } catch (error) {
                 console.error('Error parsing JSON:', error);
-                reject(error);
+                reject(new Error('Invalid JSON file'));
             }
         };
         
@@ -147,146 +144,201 @@ function importFromJSON(file) {
     });
 }
 
-// Apply imported data to the form
+// Apply imported data to the form and preview
 function applyImportedData(data) {
     try {
-        // Apply basic fields
-        if (data.title) document.getElementById('titleInput').value = data.title;
-        if (data.content) document.getElementById('contentInput').value = data.content;
-        if (data.date) document.getElementById('dateInput').value = data.date;
-        if (data.signerName) document.getElementById('signerNameInput').value = data.signerName;
-        if (data.signerTitle) document.getElementById('signerTitleInput').value = data.signerTitle;
-        if (data.contactInfo) document.getElementById('contactInfoInput').value = data.contactInfo;
-        if (data.logoText) document.getElementById('logoTextInput').value = data.logoText;
+        console.log('Applying imported data:', data);
         
-        // Apply template
+        // Update template
         if (data.template) {
             const templateSelector = document.getElementById('templateSelector');
             if (templateSelector) {
                 templateSelector.value = data.template;
-                applyTemplate(data.template);
+                currentTemplate = data.template;
             }
         }
         
-        // Apply colors
-        if (data.colors) {
-            if (data.colors.primary) document.querySelector('[data-target="primary"]').value = data.colors.primary;
-            if (data.colors.secondary) document.querySelector('[data-target="secondary"]').value = data.colors.secondary;
-            if (data.colors.accent) document.querySelector('[data-target="accent"]').value = data.colors.accent;
+        // Update layout
+        if (data.layout) {
+            const layoutSelector = document.getElementById('layoutSelector');
+            if (layoutSelector) {
+                layoutSelector.value = data.layout;
+                currentLayout = data.layout;
+            }
         }
         
-        // Apply language
-        if (data.language) {
-            currentLanguage = data.language;
-            document.querySelectorAll('.language-option').forEach(opt => {
-                opt.classList.toggle('active', opt.getAttribute('data-lang') === data.language);
-            });
-            toggleLanguage(data.language);
+        // Update text inputs
+        const textFields = ['title', 'content', 'signerName', 'signerTitle', 'contactInfo', 'logoText'];
+        textFields.forEach(field => {
+            if (data[field]) {
+                const input = document.getElementById(`${field}Input`);
+                if (input) input.value = data[field];
+            }
+        });
+        
+        // Update date
+        if (data.date) {
+            const dateInput = document.getElementById('dateInput');
+            if (dateInput) dateInput.value = data.date;
         }
+        
+        // Update colors
+        if (data.colors) {
+            const colorInputs = {
+                primary: document.getElementById('primaryColor'),
+                secondary: document.getElementById('secondaryColor'),
+                accent: document.getElementById('accentColor')
+            };
+            
+            for (const [key, value] of Object.entries(data.colors)) {
+                if (colorInputs[key]) {
+                    colorInputs[key].value = value;
+                }
+            }
+            
+            // Find and select matching color theme
+            const colorOptions = document.querySelectorAll('.color-option');
+            colorOptions.forEach(option => {
+                option.classList.remove('selected');
+                
+                if (option.getAttribute('data-primary') === data.colors.primary &&
+                    option.getAttribute('data-secondary') === data.colors.secondary &&
+                    option.getAttribute('data-accent') === data.colors.accent) {
+                    option.classList.add('selected');
+                }
+            });
+        }
+        
+        // Apply template and layout
+        applyTemplate();
+        applyLayout();
         
         // Update preview
         updatePreview();
         
-        // Show success notification
-        showToast('Announcement data imported successfully!');
-        return true;
+        showToast('Data loaded successfully!');
     } catch (error) {
         console.error('Error applying imported data:', error);
         showToast('Error applying imported data. Please try again.', true);
-        return false;
     }
 }
 
 // Get current form data
 function getCurrentFormData() {
     const data = {
-        title: document.getElementById('titleInput').value,
-        content: document.getElementById('contentInput').value,
-        date: document.getElementById('dateInput').value,
-        signerName: document.getElementById('signerNameInput').value,
-        signerTitle: document.getElementById('signerTitleInput').value,
-        contactInfo: document.getElementById('contactInfoInput').value,
-        logoText: document.getElementById('logoTextInput').value,
-        template: document.getElementById('templateSelector').value,
-        language: currentLanguage,
+        template: currentTemplate,
+        layout: currentLayout,
+        title: document.getElementById('titleInput')?.value || '',
+        content: document.getElementById('contentInput')?.value || '',
+        date: document.getElementById('dateInput')?.value || '',
+        signerName: document.getElementById('signerNameInput')?.value || '',
+        signerTitle: document.getElementById('signerTitleInput')?.value || '',
+        contactInfo: document.getElementById('contactInfoInput')?.value || '',
+        logoText: document.getElementById('logoTextInput')?.value || '',
         colors: {
-            primary: document.querySelector('[data-target="primary"]').value,
-            secondary: document.querySelector('[data-target="secondary"]').value,
-            accent: document.querySelector('[data-target="accent"]').value
-        },
-        exportDate: new Date().toISOString()
+            primary: document.getElementById('primaryColor')?.value || '#2a3b4c',
+            secondary: document.getElementById('secondaryColor')?.value || '#ce8e2c',
+            accent: document.getElementById('accentColor')?.value || '#134e65'
+        }
     };
     
     return data;
 }
 
-// Export as printer-friendly HTML
+// Export as printable HTML
 function exportAsPrintableHTML() {
     try {
-        const previewElement = document.querySelector('.announcement-preview');
-        if (!previewElement) throw new Error('Preview element not found');
-        
-        // Clone the preview for printing
-        const printContent = previewElement.cloneNode(true);
-        
         // Create a new window
         const printWindow = window.open('', '_blank');
+        if (!printWindow) {
+            throw new Error('Popup blocked. Please allow popups for this site.');
+        }
         
-        // Write HTML content
-        printWindow.document.write(`
+        // Get the announcement preview
+        const previewEl = document.querySelector('.announcement-preview');
+        if (!previewEl) {
+            throw new Error('Preview element not found');
+        }
+        
+        // Get all styles
+        const styles = Array.from(document.styleSheets)
+            .map(styleSheet => {
+                try {
+                    return Array.from(styleSheet.cssRules)
+                        .map(rule => rule.cssText)
+                        .join('\n');
+                } catch (e) {
+                    console.warn('Could not read stylesheet:', e);
+                    return '';
+                }
+            })
+            .join('\n');
+        
+        // Clone the preview element
+        const clonedPreview = previewEl.cloneNode(true);
+        
+        // Remove debug elements from the clone
+        const debugElements = clonedPreview.querySelectorAll('.debug-info, [class*="template-"]::before, [class*="layout-"]::after');
+        debugElements.forEach(el => el.remove());
+        
+        // Create HTML content for the new window
+        const htmlContent = `
             <!DOCTYPE html>
-            <html lang="en">
+            <html>
             <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
                 <title>Printable Announcement</title>
                 <style>
+                    ${styles}
+                    body {
+                        margin: 0;
+                        padding: 20px;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        min-height: 100vh;
+                        background-color: #f5f5f5;
+                    }
+                    .announcement-preview {
+                        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+                        margin: 0 auto;
+                    }
                     @media print {
-                        @page {
-                            size: A4;
-                            margin: 0;
-                        }
-                        
                         body {
-                            margin: 0;
+                            background-color: white;
                             padding: 0;
                         }
+                        .announcement-preview {
+                            box-shadow: none;
+                            margin: 0;
+                        }
                     }
-                    
-                    .announcement-container {
-                        width: 21cm;
-                        height: 29.7cm;
-                        position: relative;
-                        margin: 0 auto;
-                        padding: 0;
-                        box-sizing: border-box;
+                    /* Hide any debug elements */
+                    .debug-info, [class*="template-"]::before, [class*="layout-"]::after {
+                        display: none !important;
                     }
-                    
-                    ${document.querySelector('style').innerHTML}
                 </style>
-                ${Array.from(document.querySelectorAll('link[rel="stylesheet"]'))
-                    .map(link => link.outerHTML)
-                    .join('\n')}
             </head>
             <body>
-                <div class="announcement-container">${printContent.outerHTML}</div>
+                ${clonedPreview.outerHTML}
                 <script>
+                    // Auto print
                     window.onload = function() {
-                        window.print();
-                        setTimeout(function() { window.close(); }, 500);
+                        setTimeout(function() {
+                            window.print();
+                        }, 500);
                     };
                 </script>
             </body>
             </html>
-        `);
+        `;
         
-        // Close document
+        // Write the content to the new window
+        printWindow.document.open();
+        printWindow.document.write(htmlContent);
         printWindow.document.close();
         
-        return true;
     } catch (error) {
-        console.error('Error creating printable version:', error);
+        console.error('Error exporting as printable HTML:', error);
         showToast('Error creating printable version. Please try again.', true);
-        return false;
     }
 } 
