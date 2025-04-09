@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced Announcement Generator | Pragati Assam</title>
+    <title>Advanced Announcement Generator | Ripuranjan Baruah</title>
     
     <!-- Favicon -->
-    <link rel="icon" href="images/pragati.png" type="image/png">
+    <link rel="icon" href="images/rb_logo.png" type="image/png">
     
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Assamese:wght@100..900&family=Cormorant+Garamond:wght@300;400;500;600;700&family=Montserrat:wght@100..900&family=Raleway:wght@100..700&family=Great+Vibes&family=Inter:wght@200..900&family=Poppins:wght@300;400;500;600;700&family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
@@ -19,6 +19,12 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
+    <button id="darkModeToggle" class="dark-mode-toggle" aria-label="Toggle Dark Mode">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
+    </button>
+    
     <header>
         <h1 class="site-title">Advanced Announcement Generator</h1>
         <p class="site-description">Create professional announcements with multiple templates and export options</p>
@@ -70,7 +76,7 @@
                 
                 <div class="control-group">
                     <label for="logoTextInput">Logo Text (if no image)</label>
-                    <input type="text" id="logoTextInput" name="logoText" placeholder="PA" maxlength="3">
+                    <input type="text" id="logoTextInput" name="logoText" placeholder="RB" maxlength="3">
                 </div>
                 
                 <!-- Basic Information -->
@@ -185,7 +191,7 @@
                 <div class="announcement-notice" id="noticeType">NOTICE</div>
                 
                 <div class="announcement-header">
-                    <div class="announcement-logo" id="announcementLogo">PA</div>
+                    <div class="announcement-logo" id="announcementLogo">RB</div>
                     
                     <div class="announcement-heading">
                         <h2 class="announcement-title" id="announcementTitle">Announcement Title</h2>
@@ -217,7 +223,7 @@
     </div>
     
     <footer>
-        <p>&copy; <span id="currentYear">2023</span> Pragati Assam. All rights reserved.</p>
+        <p>&copy; <span id="currentYear">2023</span> Ripuranjan Baruah. All rights reserved.</p>
         <p>Version 2.0</p>
     </footer>
     
@@ -285,6 +291,30 @@
                     }
                 });
             }
+            
+            // Dark mode toggle
+            const darkModeToggle = document.getElementById('darkModeToggle');
+            const prefersDarkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+            
+            // Check for saved theme preference or use the system preference
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+            } else if (savedTheme === 'light') {
+                document.body.classList.remove('dark-mode');
+            } else if (prefersDarkScheme.matches) {
+                document.body.classList.add('dark-mode');
+            }
+            
+            // Toggle dark mode
+            darkModeToggle.addEventListener('click', function() {
+                document.body.classList.toggle('dark-mode');
+                if (document.body.classList.contains('dark-mode')) {
+                    localStorage.setItem('theme', 'dark');
+                } else {
+                    localStorage.setItem('theme', 'light');
+                }
+            });
         });
     </script>
 </body>
