@@ -40,16 +40,25 @@
                 <div class="control-group">
                     <label for="templateSelector">Template Style</label>
                     <select id="templateSelector" name="template">
-                        <option value="standard">Standard</option>
-                        <option value="formal">Formal</option>
-                        <option value="elegant">Elegant</option>
-                        <option value="modern">Modern</option>
-                        <option value="minimal">Minimal</option>
-                        <option value="festive">Festive</option>
-                        <option value="corporate">Corporate</option>
-                        <option value="gradient">Gradient</option>
-                        <option value="brutalist">Brutalist</option>
-                        <option value="glassmorphism">Glassmorphism</option>
+                        <optgroup label="Standard Templates">
+                            <option value="standard">Standard</option>
+                            <option value="formal">Formal</option>
+                            <option value="elegant">Elegant</option>
+                            <option value="modern">Modern</option>
+                            <option value="minimal">Minimal</option>
+                            <option value="festive">Festive</option>
+                            <option value="corporate">Corporate</option>
+                            <option value="gradient">Gradient</option>
+                            <option value="brutalist">Brutalist</option>
+                            <option value="glassmorphism">Glassmorphism</option>
+                        </optgroup>
+                        <optgroup label="Premium Templates">
+                            <option value="3d">3D Effect</option>
+                            <option value="parallax">Parallax</option>
+                            <option value="neon">Neon</option>
+                            <option value="paper">Paper</option>
+                            <option value="magazine">Magazine</option>
+                        </optgroup>
                     </select>
                 </div>
                 
@@ -57,10 +66,17 @@
                 <div class="control-group">
                     <label for="layoutSelector">Layout Style</label>
                     <select id="layoutSelector" name="layout">
-                        <option value="default">Default</option>
-                        <option value="centered">Centered</option>
-                        <option value="split">Split</option>
-                        <option value="card">Card</option>
+                        <optgroup label="Standard Layouts">
+                            <option value="default">Default</option>
+                            <option value="centered">Centered</option>
+                            <option value="split">Split</option>
+                            <option value="card">Card</option>
+                        </optgroup>
+                        <optgroup label="Premium Layouts">
+                            <option value="magazine-split">Magazine Split</option>
+                            <option value="grid">Grid</option>
+                            <option value="hero">Hero</option>
+                        </optgroup>
                     </select>
                 </div>
                 
@@ -233,15 +249,13 @@
                 </div>
                 
                 <div class="announcement-footer">
-                    <div class="signature-area">
-                        <div class="signature">
-                            <div class="signature-line"></div>
-                            <div class="signer-name" id="signerName">John Doe</div>
-                            <div class="signer-title" id="signerTitle">Director</div>
+                    <div class="announcement-signature">
+                        <div class="announcement-signer">
+                            <div class="announcement-signer-name" id="announcementSignerName">John Doe</div>
+                            <div class="announcement-signer-title" id="announcementSignerTitle">Director</div>
                         </div>
                     </div>
-                    
-                    <div class="contact-info" id="contactInfo">
+                    <div class="announcement-contact" id="announcementContactInfo">
                         Email: example@email.com | Phone: 555-1234
                     </div>
                 </div>
@@ -319,22 +333,8 @@
                 });
             }
             
-            // Layout selector
-            const layoutSelector = document.getElementById('layoutSelector');
-            if (layoutSelector) {
-                layoutSelector.addEventListener('change', function() {
-                    const layoutValue = this.value;
-                    const preview = document.querySelector('.announcement-preview');
-                    
-                    // Remove all layout classes
-                    preview.classList.remove('layout-centered', 'layout-split', 'layout-card');
-                    
-                    // Add the selected layout class if not default
-                    if (layoutValue !== 'default') {
-                        preview.classList.add('layout-' + layoutValue);
-                    }
-                });
-            }
+            // Note: Layout selector event is already handled in main.js
+            // Do not add duplicate event listener here
         });
     </script>
 </body>
