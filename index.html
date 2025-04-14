@@ -6,7 +6,7 @@
     <title>Advanced Announcement Generator | Ripuranjan Baruah</title>
     
     <!-- Favicon -->
-    <link rel="icon" href="images/rb_logo.png" type="image/png">
+    <link rel="icon" href="images/pragati.png" type="image/png">
     
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Assamese:wght@100..900&family=Cormorant+Garamond:wght@300;400;500;600;700&family=Montserrat:wght@100..900&family=Raleway:wght@100..700&family=Great+Vibes&family=Inter:wght@200..900&family=Poppins:wght@300;400;500;600;700&family=Space+Grotesk:wght@300..700&display=swap" rel="stylesheet">
@@ -22,6 +22,12 @@
     <header>
         <h1 class="site-title">Advanced Announcement Generator</h1>
         <p class="site-description">Create professional announcements with multiple templates and export options</p>
+        <!-- Dark Mode Toggle Button -->
+        <div class="dark-mode-toggle" id="darkModeToggle" title="Toggle Dark Mode">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+        </div>
     </header>
     
     <div class="container">
@@ -40,25 +46,17 @@
                 <div class="control-group">
                     <label for="templateSelector">Template Style</label>
                     <select id="templateSelector" name="template">
-                        <optgroup label="Standard Templates">
-                            <option value="standard">Standard</option>
-                            <option value="formal">Formal</option>
-                            <option value="elegant">Elegant</option>
-                            <option value="modern">Modern</option>
-                            <option value="minimal">Minimal</option>
-                            <option value="festive">Festive</option>
-                            <option value="corporate">Corporate</option>
-                            <option value="gradient">Gradient</option>
-                            <option value="brutalist">Brutalist</option>
-                            <option value="glassmorphism">Glassmorphism</option>
-                        </optgroup>
-                        <optgroup label="Premium Templates">
-                            <option value="3d">3D Effect</option>
-                            <option value="parallax">Parallax</option>
-                            <option value="neon">Neon</option>
-                            <option value="paper">Paper</option>
-                            <option value="magazine">Magazine</option>
-                        </optgroup>
+                        <option value="standard">Standard</option>
+                        <option value="minimal">Minimal</option>
+                        <option value="vibrant">Vibrant</option>
+                        <option value="elegant">Elegant</option>
+                        <option value="modern">Modern</option>
+                        <option value="corporate">Corporate</option>
+                        <option value="gradient">Gradient</option>
+                        <option value="glassmorphism">Glassmorphism</option>
+                        <option value="neon">Neon</option>
+                        <option value="cinematic">Cinematic</option>
+                        <option value="certificate">Certificate</option>
                     </select>
                 </div>
                 
@@ -66,17 +64,16 @@
                 <div class="control-group">
                     <label for="layoutSelector">Layout Style</label>
                     <select id="layoutSelector" name="layout">
-                        <optgroup label="Standard Layouts">
-                            <option value="default">Default</option>
-                            <option value="centered">Centered</option>
-                            <option value="split">Split</option>
-                            <option value="card">Card</option>
-                        </optgroup>
-                        <optgroup label="Premium Layouts">
-                            <option value="magazine-split">Magazine Split</option>
-                            <option value="grid">Grid</option>
-                            <option value="hero">Hero</option>
-                        </optgroup>
+                        <option value="default">Default</option>
+                        <option value="centered">Centered</option>
+                        <option value="split">Split</option>
+                        <option value="f-pattern">F-Pattern</option>
+                        <option value="card">Card</option>
+                        <option value="business-card">Business Card</option>
+                        <option value="timeline">Timeline</option>
+                        <option value="card-grid">Card Grid</option>
+                        <option value="magazine-split">Magazine Split</option>
+                        <option value="grid">Grid</option>
                     </select>
                 </div>
                 
@@ -90,6 +87,7 @@
                         <option value="general">General Announcement</option>
                         <option value="holiday">Holiday Announcement</option>
                         <option value="achievement">Achievement Announcement</option>
+                        <option value="business-card">Business Card</option>
                     </select>
                 </div>
                 
@@ -231,8 +229,6 @@
         <!-- Preview Section -->
         <div class="preview-container">
             <div class="announcement-preview">
-                <div class="announcement-notice" id="noticeType">NOTICE</div>
-                
                 <div class="announcement-header">
                     <div class="announcement-logo" id="announcementLogo">RB</div>
                     
@@ -265,7 +261,7 @@
     
     <footer>
         <p>&copy; <span id="currentYear">2023</span> Ripuranjan Baruah. All rights reserved.</p>
-        <p>Version 2.0</p>
+        <p>Version 3.0</p>
     </footer>
     
     <!-- JavaScript -->
@@ -330,6 +326,21 @@
                             this.value = '';
                         }
                     }
+                });
+            }
+            
+            // Dark mode toggle
+            const darkModeToggle = document.getElementById('darkModeToggle');
+            if (darkModeToggle) {
+                // Check for saved preference
+                const isDarkMode = localStorage.getItem('darkMode') === 'true';
+                if (isDarkMode) {
+                    document.body.classList.add('dark-mode');
+                }
+                
+                darkModeToggle.addEventListener('click', function() {
+                    document.body.classList.toggle('dark-mode');
+                    localStorage.setItem('darkMode', document.body.classList.contains('dark-mode'));
                 });
             }
             

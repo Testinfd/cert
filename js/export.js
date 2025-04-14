@@ -6,8 +6,25 @@ async function exportAsPNG(previewElement, filename = 'announcement.png') {
     showLoading();
     
     try {
-        // Capture the announcement preview with html2canvas
-        const canvas = await html2canvas(previewElement, {
+        // Clone the preview element to avoid modifying the original
+        const originalElement = previewElement;
+        const clonedElement = originalElement.cloneNode(true);
+        
+        // Hide debug elements from the clone
+        const debugElements = clonedElement.querySelectorAll('.debug-info, [class*="template-"]::before, [class*="layout-"]::after');
+        debugElements.forEach(el => {
+            if (el.style) {
+                el.style.display = 'none';
+            }
+        });
+        
+        // Temporarily append clone to body (hidden from view)
+        clonedElement.style.position = 'absolute';
+        clonedElement.style.top = '-9999px';
+        document.body.appendChild(clonedElement);
+        
+        // Capture the cloned announcement preview with html2canvas
+        const canvas = await html2canvas(clonedElement, {
             scale: 2, // Higher quality with 2x scale
             useCORS: true, // Allow loading cross-origin images
             allowTaint: true, // Allow exporting tainted canvas
@@ -16,6 +33,9 @@ async function exportAsPNG(previewElement, filename = 'announcement.png') {
             windowWidth: document.documentElement.offsetWidth,
             windowHeight: document.documentElement.offsetHeight
         });
+        
+        // Remove the clone after capturing
+        document.body.removeChild(clonedElement);
         
         // Convert to image data
         const imageData = canvas.toDataURL('image/png');
@@ -47,14 +67,34 @@ async function exportAsPDF(previewElement, filename = 'announcement.pdf') {
     showLoading();
     
     try {
-        // Capture the announcement preview with html2canvas
-        const canvas = await html2canvas(previewElement, {
+        // Clone the preview element to avoid modifying the original
+        const originalElement = previewElement;
+        const clonedElement = originalElement.cloneNode(true);
+        
+        // Hide debug elements from the clone
+        const debugElements = clonedElement.querySelectorAll('.debug-info, [class*="template-"]::before, [class*="layout-"]::after');
+        debugElements.forEach(el => {
+            if (el.style) {
+                el.style.display = 'none';
+            }
+        });
+        
+        // Temporarily append clone to body (hidden from view)
+        clonedElement.style.position = 'absolute';
+        clonedElement.style.top = '-9999px';
+        document.body.appendChild(clonedElement);
+        
+        // Capture the cloned announcement preview with html2canvas
+        const canvas = await html2canvas(clonedElement, {
             scale: 2, // Higher quality with 2x scale
             useCORS: true, // Allow loading cross-origin images
             allowTaint: true, // Allow exporting tainted canvas
             logging: false, // Disable logging
             backgroundColor: null // Transparent background
         });
+        
+        // Remove the clone after capturing
+        document.body.removeChild(clonedElement);
         
         // Get image data
         const imgData = canvas.toDataURL('image/png');
