@@ -13,24 +13,63 @@ const templates = {
         },
         styles: {
             background: '#ffffff',
-            padding: '50px'
+            padding: '50px',
+            borderRadius: '16px',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.08)',
+            position: 'relative'
+        },
+        effects: {
+            softShadow: true,
+            subtlePattern: true
         }
     },
-    formal: {
-        name: 'Formal',
+    minimal: {
+        name: 'Minimal',
         fonts: [
-            'Montserrat',
-            'Raleway'
+            'Inter',
+            'Space Grotesk'
         ],
         colors: {
-            primary: '#1a2c3f',
-            secondary: '#8a0202',
-            accent: '#283e5d'
+            primary: '#333333',
+            secondary: '#6366f1',
+            accent: '#a5b4fc'
         },
         styles: {
             background: '#ffffff',
+            padding: '60px 50px',
+            borderRadius: '2px',
+            boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
+            position: 'relative',
+            borderLeft: '3px solid #6366f1'
+        },
+        effects: {
+            cleanLines: true,
+            thinBorders: true
+        }
+    },
+    vibrant: {
+        name: 'Vibrant',
+        fonts: [
+            'Poppins',
+            'Inter'
+        ],
+        colors: {
+            primary: '#6d28d9',
+            secondary: '#f97316',
+            accent: '#10b981'
+        },
+        styles: {
+            background: 'linear-gradient(135deg, #ffffff 0%, #f9fafb 100%)',
             padding: '50px',
-            border: '10px solid #1a2c3f'
+            borderRadius: '24px',
+            boxShadow: '0 25px 50px rgba(109, 40, 217, 0.1)',
+            position: 'relative',
+            overflow: 'hidden'
+        },
+        effects: {
+            colorBurst: true,
+            subtleAnimation: true,
+            accentCorners: true
         }
     },
     elegant: {
@@ -47,61 +86,42 @@ const templates = {
         },
         styles: {
             background: '#fffdf9',
-            padding: '50px',
-            border: '1px solid #c09f80'
+            padding: '60px 50px',
+            border: '1px solid rgba(192, 159, 128, 0.3)',
+            boxShadow: '0 25px 50px rgba(0,0,0,0.06)',
+            position: 'relative',
+            overflow: 'hidden',
+            borderRadius: '4px'
+        },
+        effects: {
+            flourish: true,
+            dropCap: true,
+            subtleTexture: true
         }
     },
     modern: {
         name: 'Modern',
-        fonts: [
-            'Space Grotesk',
-            'Inter'
-        ],
+        fonts: {
+            heading: 'Space Grotesk',
+            body: 'Inter'
+        },
         colors: {
-            primary: '#16213e',
-            secondary: '#e94560',
-            accent: '#0f3460'
+            primary: '#1a73e8',
+            secondary: '#34a853',
+            accent: '#fbbc04'
         },
         styles: {
-            background: '#ffffff',
+            background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)',
             padding: '50px',
-            boxShadow: '0 20px 40px rgba(0,0,0,0.08)'
-        }
-    },
-    festive: {
-        name: 'Festive',
-        fonts: [
-            'Poppins',
-            'Raleway'
-        ],
-        colors: {
-            primary: '#5c2a9d',
-            secondary: '#fdca40',
-            accent: '#0a81ab'
-        },
-        styles: {
-            background: '#fffbf4',
-            padding: '50px',
+            borderRadius: '20px',
+            boxShadow: '0 20px 50px rgba(26, 115, 232, 0.08)',
             position: 'relative',
             overflow: 'hidden'
-        }
-    },
-    minimal: {
-        name: 'Minimal',
-        fonts: [
-            'Inter',
-            'Space Grotesk'
-        ],
-        colors: {
-            primary: '#333333',
-            secondary: '#666666',
-            accent: '#999999'
         },
-        styles: {
-            background: '#ffffff',
-            padding: '60px',
-            border: '1px solid #eeeeee',
-            boxShadow: 'none'
+        effects: {
+            patternOverlay: true,
+            subtle3D: true,
+            floatingElements: true
         }
     },
     corporate: {
@@ -118,7 +138,14 @@ const templates = {
         styles: {
             background: '#ffffff',
             padding: '50px',
-            borderLeft: '5px solid #1c273c'
+            borderLeft: '5px solid #1c273c',
+            boxShadow: '0 20px 50px rgba(0,0,0,0.08)',
+            position: 'relative',
+            borderRadius: '4px'
+        },
+        effects: {
+            gridBackground: true,
+            enhancedSections: true
         }
     },
     gradient: {
@@ -134,25 +161,16 @@ const templates = {
         },
         styles: {
             background: 'linear-gradient(135deg, #ffffff 0%, #f5f7fa 100%)',
-            padding: '50px'
-        }
-    },
-    brutalist: {
-        name: 'Brutalist',
-        fonts: [
-            'Space Grotesk',
-            'Inter'
-        ],
-        colors: {
-            primary: '#000000',
-            secondary: '#000000',
-            accent: '#000000'
+            padding: '55px',
+            borderRadius: '24px',
+            position: 'relative',
+            overflow: 'hidden',
+            boxShadow: '0 25px 60px rgba(58, 28, 113, 0.08)'
         },
-        styles: {
-            background: '#f0f0f0',
-            padding: '50px',
-            border: '3px solid #000000',
-            boxShadow: '10px 10px 0 rgba(0,0,0,0.9)'
+        effects: {
+            softGradientOverlay: true,
+            subtleShadow: true,
+            glowingEdges: true
         }
     },
     glassmorphism: {
@@ -167,53 +185,20 @@ const templates = {
             accent: '#ffaf7b'
         },
         styles: {
-            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.4))',
+            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.5))',
             padding: '50px',
-            backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
+            backdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255, 255, 255, 0.6)',
+            boxShadow: '0 25px 45px rgba(0, 0, 0, 0.1)',
             position: 'relative',
-            overflow: 'hidden'
+            overflow: 'hidden',
+            borderRadius: '24px'
+        },
+        effects: {
+            orbs: true,
+            glow: true,
+            depthLayers: true
         }
-    },
-    '3d': {
-        name: '3D Effect',
-        fonts: [
-            'Montserrat',
-            'Space Grotesk'
-        ],
-        colors: {
-            primary: '#2a3b4c',
-            secondary: '#ce8e2c',
-            accent: '#134e65'
-        },
-        styles: {
-            background: '#ffffff',
-            padding: '50px',
-            transformStyle: 'preserve-3d',
-            perspective: '1000px',
-            transform: 'rotateX(5deg) rotateY(-5deg)',
-            boxShadow: '20px 20px 60px rgba(0,0,0,0.1), -20px -20px 60px rgba(255,255,255,0.8)'
-        },
-        premium: true
-    },
-    'parallax': {
-        name: 'Parallax',
-        fonts: [
-            'Poppins',
-            'Inter'
-        ],
-        colors: {
-            primary: '#1e3c72',
-            secondary: '#2a5298',
-            accent: '#4776ad'
-        },
-        styles: {
-            background: '#ffffff',
-            padding: '50px',
-            position: 'relative',
-            overflow: 'hidden'
-        },
-        premium: true
     },
     'neon': {
         name: 'Neon',
@@ -230,46 +215,73 @@ const templates = {
             background: '#0a0a0a',
             padding: '50px',
             border: '1px solid rgba(255, 0, 230, 0.5)',
-            boxShadow: '0 0 20px rgba(255, 0, 230, 0.5), inset 0 0 20px rgba(255, 0, 230, 0.2)'
+            boxShadow: '0 0 25px rgba(255, 0, 230, 0.5), inset 0 0 25px rgba(255, 0, 230, 0.2)',
+            borderRadius: '16px',
+            color: '#ffffff',
+            position: 'relative',
+            overflow: 'hidden'
         },
-        premium: true
+        effects: {
+            textGlow: true,
+            flicker: true,
+            neonGrid: true
+        }
     },
-    'paper': {
-        name: 'Paper',
+    'cinematic': {
+        name: 'Cinematic',
         fonts: [
-            'Courier New',
-            'monospace'
-        ],
-        colors: {
-            primary: '#8b5a3c',
-            secondary: '#9c6644',
-            accent: '#7d5c45'
-        },
-        styles: {
-            background: '#f9f5e9',
-            padding: '50px',
-            boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
-            border: '1px solid #e4dcbe',
-            position: 'relative'
-        },
-        premium: true
-    },
-    'magazine': {
-        name: 'Magazine',
-        fonts: [
-            'Space Grotesk',
+            'Montserrat',
             'Inter'
         ],
         colors: {
-            primary: '#000000',
-            secondary: '#000000',
-            accent: '#333333'
+            primary: '#1a1a1a',
+            secondary: '#e50914',
+            accent: '#cccccc'
         },
         styles: {
-            background: '#ffffff',
-            padding: '40px'
+            background: 'linear-gradient(to bottom, #000000, #2c3e50)',
+            padding: '60px',
+            color: '#ffffff',
+            boxShadow: '0 30px 60px rgba(0, 0, 0, 0.3)',
+            position: 'relative',
+            overflow: 'hidden',
+            borderRadius: '16px'
         },
-        premium: true
+        effects: {
+            textGradient: true,
+            letterSpacing: true,
+            diagonalGlow: true,
+            cinematicBars: true
+        }
+    },
+    'certificate': {
+        name: 'Certificate',
+        fonts: [
+            'Cormorant Garamond',
+            'Great Vibes',
+            'Montserrat'
+        ],
+        colors: {
+            primary: '#2c3e50',
+            secondary: '#c0965c',
+            accent: '#2980b9'
+        },
+        styles: {
+            background: '#f5f5f5',
+            padding: '60px',
+            border: '15px solid #f9f0dd',
+            outline: '2px solid #c0965c',
+            boxShadow: '0 20px 40px rgba(0, 0, 0, 0.15)',
+            position: 'relative',
+            overflow: 'hidden',
+            borderRadius: '3px'
+        },
+        effects: {
+            patternBackground: true,
+            seal: true,
+            stamp: true,
+            decorativeBorders: true
+        }
     }
 };
 
@@ -330,24 +342,6 @@ const colorThemes = [
         }
     },
     {
-        name: 'Slate',
-        id: 'slate',
-        colors: {
-            primary: '#34495e',
-            secondary: '#9b59b6',
-            accent: '#8e44ad'
-        }
-    },
-    {
-        name: 'Sunset',
-        id: 'sunset',
-        colors: {
-            primary: '#2c3e50',
-            secondary: '#e67e22',
-            accent: '#d35400'
-        }
-    },
-    {
         name: 'Oceanic',
         id: 'oceanic',
         colors: {
@@ -379,26 +373,43 @@ const layouts = {
     },
     split: {
         name: 'Split',
-        className: 'layout-split'
+        className: 'layout-split',
+        description: 'Two-column layout with image support'
     },
-    card: {
+    'f-pattern': {
+        name: 'F-Pattern',
+        className: 'layout-f-pattern',
+        description: 'Content arranged in F-pattern for easy reading'
+    },
+    'card': {
         name: 'Card',
-        className: 'layout-card'
+        className: 'layout-card',
+        description: 'Compact card layout for concise information'
     },
     'magazine-split': {
         name: 'Magazine Split',
         className: 'layout-magazine-split',
-        premium: true
+        description: 'Two-column magazine-style layout'
     },
     'grid': {
         name: 'Grid',
         className: 'layout-grid',
-        premium: true
+        description: 'Grid layout for organized content display'
     },
-    'hero': {
-        name: 'Hero',
-        className: 'layout-hero',
-        premium: true
+    'business-card': {
+        name: 'Business Card',
+        className: 'layout-business-card',
+        description: 'Professional business card format'
+    },
+    'timeline': {
+        name: 'Timeline',
+        className: 'layout-timeline',
+        description: 'Vertical timeline for chronological content'
+    },
+    'card-grid': {
+        name: 'Card Grid',
+        className: 'layout-card-grid',
+        description: 'Grid of cards with image upload capability'
     }
 };
 

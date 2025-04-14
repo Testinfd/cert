@@ -27,15 +27,8 @@ document.addEventListener('DOMContentLoaded', function() {
         // Initialize premium features
         initializePremiumFeatures();
         
-        // Setup Glassmorphism effect
-        setupGlassmorphismEffect();
-        
-        // Update glassmorphism effect when template changes
-        document.querySelectorAll('.template-option').forEach(option => {
-            option.addEventListener('click', function() {
-                setTimeout(setupGlassmorphismEffect, 100); // Add delay to ensure DOM is updated
-            });
-        });
+        // Update preview on load
+        updatePreview();
         
         console.log('Application initialized successfully');
     } catch (error) {
@@ -133,6 +126,29 @@ function hideLoading() {
     }
 }
 
+// Handle logo upload
+function handleLogoUpload(event) {
+    console.log('Logo upload changed');
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const logoElement = document.getElementById('announcementLogo');
+            if (logoElement) {
+                // Set background image
+                logoElement.style.backgroundImage = `url(${e.target.result})`;
+                logoElement.style.backgroundSize = 'cover';
+                logoElement.style.backgroundPosition = 'center';
+                logoElement.textContent = '';
+                logoElement.classList.add('has-image');
+                customLogoLoaded = true;
+                console.log('Logo image loaded successfully');
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
 // Global variables
 let currentLanguage = 'english';
 let currentTemplate = 'standard';
@@ -145,294 +161,297 @@ let isPremium = false;
 function initializeElements() {
     console.log('Initializing elements');
     
-    // Check if required libraries are loaded
-    if (typeof html2canvas === 'undefined') {
-        console.warn('html2canvas library not found - export to PNG/PDF may not work');
-    }
+    // Create common UI elements
+    createCommonElements();
     
-    if (typeof jspdf === 'undefined') {
-        console.warn('jsPDF library not found - export to PDF may not work');
-    }
+    // Add event listeners
+    addEventListeners();
     
-    // Check if templates and layouts objects exist
-    if (typeof templates === 'undefined') {
-        console.error('Templates object is not defined. Make sure templates.js is loaded before main.js');
-        showToast('Error: Templates not loaded properly. Check console for details.', true);
-        return;
-    }
+    // Initialize templates
+    initializeTemplates();
     
-    if (typeof layouts === 'undefined') {
-        console.error('Layouts object is not defined. Make sure templates.js is loaded before main.js');
-        showToast('Error: Layouts not loaded properly. Check console for details.', true);
-        return;
-    }
+    // Set default values
+    setDefaults();
     
-    console.log('Found templates:', Object.keys(templates).length);
-    console.log('Found layouts:', Object.keys(layouts).length);
+    // Initialize premium features
+    initializePremiumFeatures();
     
-    // Add premium badges to premium templates
-    const templateSelect = document.getElementById('templateSelector');
-    if (templateSelect) {
-        for (const [key, template] of Object.entries(templates)) {
-            if (template.premium) {
-                const option = templateSelect.querySelector(`option[value="${key}"]`);
-                if (option) {
-                    option.innerHTML = `${template.name} <span class="premium-badge">Premium</span>`;
-                }
-            }
-        }
-        console.log('Added premium badges to template selector');
-    } else {
-        console.error('Template selector element not found');
-    }
+    // Make preview elements editable
+    makePreviewEditable();
     
-    // Add premium badges to premium layouts
-    const layoutSelect = document.getElementById('layoutSelector');
-    if (layoutSelect) {
-        for (const [key, layout] of Object.entries(layouts)) {
-            if (layout.premium) {
-                const option = layoutSelect.querySelector(`option[value="${key}"]`);
-                if (option) {
-                    option.innerHTML = `${layout.name} <span class="premium-badge">Premium</span>`;
-                }
-            }
-        }
-        console.log('Added premium badges to layout selector');
-    } else {
-        console.error('Layout selector element not found');
-    }
+    // Update debug info if enabled
+    updateDebugInfo();
+    
+    console.log('Elements initialized successfully');
 }
 
 // Add event listeners to all form controls
 function addEventListeners() {
     console.log('Adding event listeners to form controls');
     
-    // Form controls
+    // Add listeners to all input elements
     const inputs = document.querySelectorAll('#announcementForm input, #announcementForm textarea, #announcementForm select');
-    if (inputs.length > 0) {
-        inputs.forEach(input => {
+    inputs.forEach(input => {
+        if (input.id !== 'loadDataInput') { // Skip the file input for loading data
             input.addEventListener('input', function() {
-                console.log('Input changed:', input.id || input.name || input.type);
+                console.log('Added input listener to:', input.id);
                 updatePreview();
             });
-            console.log('Added input listener to:', input.id || input.name || input.type);
-        });
-    } else {
-        console.error('No form inputs found in #announcementForm');
-    }
+        }
+    });
     
-    // Logo upload
+    // Add special handler for logo upload
     const logoUpload = document.getElementById('logoUpload');
     if (logoUpload) {
         logoUpload.addEventListener('change', handleLogoUpload);
-        console.log('Added change listener to logo upload');
-    } else {
-        console.error('Logo upload element not found');
     }
     
-    // Template selector
+    // Add template selector event listener
     const templateSelector = document.getElementById('templateSelector');
     if (templateSelector) {
-        console.log('Found template selector with options:', templateSelector.options.length);
         templateSelector.addEventListener('change', function() {
             currentTemplate = this.value;
             console.log('Template changed to:', currentTemplate);
             applyTemplate();
         });
-        console.log('Added change listener to template selector');
-    } else {
-        console.error('Template selector element not found');
     }
     
-    // Layout selector
+    // Add layout selector event listener
     const layoutSelector = document.getElementById('layoutSelector');
     if (layoutSelector) {
-        console.log('Found layout selector with options:', layoutSelector.options.length);
         layoutSelector.addEventListener('change', function() {
             currentLayout = this.value;
             console.log('Layout changed to:', currentLayout);
-            applyLayout();
+            applyLayout(currentLayout);
         });
-        console.log('Added change listener to layout selector');
-    } else {
-        console.error('Layout selector element not found');
     }
     
-    // Preset selector
-    const presetSelector = document.getElementById('presetSelector');
-    if (presetSelector) {
-        console.log('Found preset selector with options:', presetSelector.options.length);
-        presetSelector.addEventListener('change', function() {
-            const preset = this.value;
-            if (preset && preset !== '') {
-                console.log('Loading preset:', preset);
-                loadTemplatePreset(preset);
-            }
-        });
-        console.log('Added change listener to preset selector');
-    } else {
-        console.error('Preset selector element not found');
-    }
-    
-    // Color theme options
+    // Add click listeners to color theme options
     const colorOptions = document.querySelectorAll('.color-option');
-    if (colorOptions.length > 0) {
-        colorOptions.forEach(option => {
-            option.addEventListener('click', function() {
-                // Remove selected class from all options
-                colorOptions.forEach(opt => opt.classList.remove('selected'));
-                // Add selected class to clicked option
-                this.classList.add('selected');
-                
-                // Get color values from the selected theme
-                const primaryColor = this.getAttribute('data-primary');
-                const secondaryColor = this.getAttribute('data-secondary');
-                const accentColor = this.getAttribute('data-accent');
-                
-                console.log('Color theme selected:', this.getAttribute('data-theme'));
-                console.log('Colors:', { primaryColor, secondaryColor, accentColor });
-                
-                // Update color pickers
-                const primaryPicker = document.querySelector('[data-target="primary"]');
-                const secondaryPicker = document.querySelector('[data-target="secondary"]');
-                const accentPicker = document.querySelector('[data-target="accent"]');
-                
-                if (primaryPicker) primaryPicker.value = primaryColor;
-                if (secondaryPicker) secondaryPicker.value = secondaryColor;
-                if (accentPicker) accentPicker.value = accentColor;
-                
-                // Update preview
-                updatePreview();
-            });
+    colorOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            // Remove selected class from all options
+            colorOptions.forEach(opt => opt.classList.remove('selected'));
+            
+            // Add selected class to clicked option
+            this.classList.add('selected');
+            
+            // Get theme colors from data attributes
+            const primary = this.getAttribute('data-primary');
+            const secondary = this.getAttribute('data-secondary');
+            const accent = this.getAttribute('data-accent');
+            
+            // Update color inputs
+            document.getElementById('primaryColor').value = primary;
+            document.getElementById('secondaryColor').value = secondary;
+            document.getElementById('accentColor').value = accent;
+            
+            // Update preview
+            updatePreview();
         });
-        console.log('Added click listeners to', colorOptions.length, 'color options');
-    } else {
-        console.error('No color option elements found');
-    }
+    });
     
-    // Color picker inputs
-    const colorPickers = document.querySelectorAll('input[type="color"]');
-    if (colorPickers.length > 0) {
-        colorPickers.forEach(picker => {
-            picker.addEventListener('input', function() {
-                console.log('Color picker changed:', picker.getAttribute('data-target'), 'to', picker.value);
-                updatePreview();
-            });
-        });
-        console.log('Added input listeners to', colorPickers.length, 'color pickers');
-    } else {
-        console.error('No color picker elements found');
-    }
-    
-    // Language toggle
+    // Add click/change listeners to language options
     const languageOptions = document.querySelectorAll('.language-option');
-    if (languageOptions.length > 0) {
-        languageOptions.forEach(option => {
-            option.addEventListener('click', function() {
-                languageOptions.forEach(opt => opt.classList.remove('active'));
-                this.classList.add('active');
-                currentLanguage = this.getAttribute('data-lang');
-                console.log('Language changed to:', currentLanguage);
-                toggleLanguage(currentLanguage);
-            });
+    languageOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            // Remove active class from all options
+            languageOptions.forEach(opt => opt.classList.remove('active'));
+            
+            // Add active class to clicked option
+            this.classList.add('active');
+            
+            // Update current language
+            currentLanguage = this.getAttribute('data-lang');
+            
+            // Toggle language in UI
+            toggleLanguage(currentLanguage);
+            
+            // Update preview
+            updatePreview();
         });
-        console.log('Added click listeners to', languageOptions.length, 'language options');
-    } else {
-        console.error('No language option elements found');
-    }
+    });
     
-    // Download buttons
-    const downloadPngBtn = document.getElementById('downloadPng');
-    if (downloadPngBtn) {
-        downloadPngBtn.addEventListener('click', function() {
-            console.log('Download PNG button clicked');
-            downloadAsPng();
-        });
-        console.log('Added click listener to download PNG button');
-    } else {
-        console.error('Download PNG button not found');
-    }
-    
-    const downloadPdfBtn = document.getElementById('downloadPdf');
-    if (downloadPdfBtn) {
-        downloadPdfBtn.addEventListener('click', function() {
-            console.log('Download PDF button clicked');
-            downloadAsPdf();
-        });
-        console.log('Added click listener to download PDF button');
-    } else {
-        console.error('Download PDF button not found');
-    }
-    
-    // Print button
-    const printBtn = document.getElementById('printBtn');
-    if (printBtn) {
-        printBtn.addEventListener('click', function() {
-            console.log('Print button clicked');
-            window.print();
-        });
-        console.log('Added click listener to print button');
-    } else {
-        console.error('Print button not found');
-    }
-    
-    // Save data button
-    const saveDataBtn = document.getElementById('saveDataBtn');
-    if (saveDataBtn) {
-        saveDataBtn.addEventListener('click', function() {
-            console.log('Save data button clicked');
-            const formData = getCurrentFormData();
-            exportAsJSON(formData);
-        });
-        console.log('Added click listener to save data button');
-    } else {
-        console.error('Save data button not found');
-    }
-    
-    // Load data button and input
-    const loadDataBtn = document.getElementById('loadDataBtn');
-    const loadDataInput = document.getElementById('loadDataInput');
-    
-    if (loadDataBtn && loadDataInput) {
-        loadDataBtn.addEventListener('click', function() {
-            console.log('Load data button clicked');
-            loadDataInput.click();
-        });
-        
-        loadDataInput.addEventListener('change', function(event) {
-            console.log('Load data input changed');
-            if (event.target.files.length > 0) {
-                const file = event.target.files[0];
-                importFromJSON(file)
-                    .then(data => {
-                        console.log('Data imported successfully');
-                        applyImportedData(data);
-                    })
-                    .catch(error => {
-                        console.error('Error importing data:', error);
-                        showToast('Error loading data: ' + error.message, true);
-                    });
-                
-                // Reset the input to allow loading the same file again
-                this.value = '';
-            }
-        });
-        console.log('Added click/change listeners to load data button/input');
-    } else {
-        console.error('Load data button or input not found');
-    }
-    
-    // Reset form button
-    const resetFormBtn = document.getElementById('resetForm');
-    if (resetFormBtn) {
-        resetFormBtn.addEventListener('click', function() {
-            console.log('Reset form button clicked');
+    // Add listener for reset button
+    const resetButton = document.getElementById('resetForm');
+    if (resetButton) {
+        resetButton.addEventListener('click', function() {
+            console.log('Added click listener to reset form button');
             resetForm();
         });
-        console.log('Added click listener to reset form button');
-    } else {
-        console.error('Reset form button not found');
     }
+    
+    // Add listeners for export buttons
+    const downloadPngButton = document.getElementById('downloadPng');
+    if (downloadPngButton) {
+        downloadPngButton.addEventListener('click', function() {
+            console.log('Download PNG button clicked');
+            const previewElement = document.querySelector('.announcement-preview');
+            if (previewElement) {
+                exportAsPNG(previewElement);
+            } else {
+                console.error('Preview element not found');
+                showToast('Error: Preview element not found', true);
+            }
+        });
+    }
+    
+    const downloadPdfButton = document.getElementById('downloadPdf');
+    if (downloadPdfButton) {
+        downloadPdfButton.addEventListener('click', function() {
+            console.log('Download PDF button clicked');
+            const previewElement = document.querySelector('.announcement-preview');
+            if (previewElement) {
+                exportAsPDF(previewElement);
+            } else {
+                console.error('Preview element not found');
+                showToast('Error: Preview element not found', true);
+            }
+        });
+    }
+    
+    console.log('Event listeners added successfully');
+}
+
+// Helper function to convert hex color to RGB
+function hexToRgb(hex) {
+    // Remove the hash if it exists
+    hex = hex.replace(/^#/, '');
+    
+    // Parse the hex values
+    let bigint = parseInt(hex, 16);
+    let r = (bigint >> 16) & 255;
+    let g = (bigint >> 8) & 255;
+    let b = bigint & 255;
+    
+    return { r, g, b };
+}
+
+// Set default values for the form
+function setDefaults() {
+    console.log('Setting defaults');
+    
+    // Set default date to today
+    const dateInput = document.getElementById('dateInput');
+    if (dateInput) {
+        const today = new Date();
+        const formattedDate = today.toISOString().split('T')[0];
+        dateInput.value = formattedDate;
+    }
+    
+    // Set default logo text
+    const logoTextInput = document.getElementById('logoTextInput');
+    if (logoTextInput && !logoTextInput.value) {
+        logoTextInput.value = 'RB';
+    }
+    
+    // Set default title
+    const titleInput = document.getElementById('titleInput');
+    if (titleInput && !titleInput.value) {
+        titleInput.value = 'Announcement Title';
+    }
+    
+    // Set default signer info
+    const signerNameInput = document.getElementById('signerNameInput');
+    if (signerNameInput && !signerNameInput.value) {
+        signerNameInput.value = 'John Doe';
+    }
+    
+    const signerTitleInput = document.getElementById('signerTitleInput');
+    if (signerTitleInput && !signerTitleInput.value) {
+        signerTitleInput.value = 'Director';
+    }
+    
+    const contactInfoInput = document.getElementById('contactInfoInput');
+    if (contactInfoInput && !contactInfoInput.value) {
+        contactInfoInput.value = 'Email: example@email.com | Phone: 555-1234';
+    }
+    
+    // Set default content if empty
+    const contentInput = document.getElementById('contentInput');
+    if (contentInput && !contentInput.value) {
+        contentInput.value = 'This is a sample announcement content. Replace this with your actual announcement text.';
+    }
+    
+    // Update preview with defaults
+    updatePreview();
+    
+    console.log('Defaults set successfully');
+}
+
+// Initialize premium features
+function initializePremiumFeatures() {
+    console.log('Initializing premium features');
+    
+    // Check if premium features are enabled (e.g., via localStorage or URL parameter)
+    const urlParams = new URLSearchParams(window.location.search);
+    const hasPremiumParam = urlParams.has('premium');
+    const hasPremiumStorage = localStorage.getItem('premiumEnabled') === 'true';
+    
+    isPremium = hasPremiumParam || hasPremiumStorage;
+    
+    if (isPremium) {
+        console.log('Premium features are enabled');
+        
+        // Store premium state
+        localStorage.setItem('premiumEnabled', 'true');
+        
+        // Enable premium templates and layouts in selectors
+        const premiumTemplates = document.querySelectorAll('#templateSelector option[data-premium="true"]');
+        premiumTemplates.forEach(option => {
+            option.disabled = false;
+        });
+        
+        const premiumLayouts = document.querySelectorAll('#layoutSelector option[data-premium="true"]');
+        premiumLayouts.forEach(option => {
+            option.disabled = false;
+        });
+        
+        // Add premium badge to the header
+        const header = document.querySelector('header');
+        if (header && !document.querySelector('.premium-badge')) {
+            const premiumBadge = document.createElement('div');
+            premiumBadge.className = 'premium-badge';
+            premiumBadge.textContent = 'PREMIUM';
+            header.appendChild(premiumBadge);
+            
+            // Add premium badge styles
+            if (!document.getElementById('premium-badge-style')) {
+                const style = document.createElement('style');
+                style.id = 'premium-badge-style';
+                style.textContent = `
+                    .premium-badge {
+                        position: absolute;
+                        top: 10px;
+                        right: 10px;
+                        background-color: var(--secondary-color, gold);
+                        color: var(--primary-color, #333);
+                        padding: 5px 10px;
+                        border-radius: 15px;
+                        font-size: 12px;
+                        font-weight: bold;
+                        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+        }
+    } else {
+        console.log('Premium features are not enabled');
+        
+        // Disable premium templates and layouts in selectors
+        const premiumTemplates = document.querySelectorAll('#templateSelector option[data-premium="true"]');
+        premiumTemplates.forEach(option => {
+            option.disabled = true;
+        });
+        
+        const premiumLayouts = document.querySelectorAll('#layoutSelector option[data-premium="true"]');
+        premiumLayouts.forEach(option => {
+            option.disabled = true;
+        });
+    }
+    
+    console.log('Premium features initialization complete');
 }
 
 // Initialize templates
@@ -467,247 +486,804 @@ function initializeTemplates() {
     
     // Apply template and layout
     applyTemplate();
-    applyLayout();
+    applyLayout(currentLayout);
 }
 
-// Apply template class to preview
+// Apply template styling to preview
 function applyTemplate() {
+    console.log('Applying template');
+    
+    try {
+        const previewContainer = document.querySelector('.announcement-preview');
+        if (!previewContainer) {
+            console.error('Preview container not found');
+            return;
+        }
+
+        // Get selected template
+        const templateSelector = document.getElementById('templateSelector');
+        if (!templateSelector) {
+            console.error('Template selector not found');
+            return;
+        }
+        
+        const selectedTemplate = templateSelector.value;
+        currentTemplate = selectedTemplate;
+        
+        // Get template config
+        const templateConfig = templates[selectedTemplate] || templates.standard;
+        console.log('Template config:', templateConfig);
+        
+        // First reset styles to defaults
+        previewContainer.style = '';
+        
+        // Remove all template classes
+        for (const template in templates) {
+            previewContainer.classList.remove(`template-${template}`);
+        }
+        
+        // Add selected template class
+        previewContainer.classList.add(`template-${selectedTemplate}`);
+        
+        // Apply fonts
+        if (templateConfig.fonts) {
+            document.documentElement.style.setProperty('--heading-font', Array.isArray(templateConfig.fonts) ? templateConfig.fonts[0] : templateConfig.fonts.heading);
+            document.documentElement.style.setProperty('--body-font', Array.isArray(templateConfig.fonts) ? templateConfig.fonts[1] || templateConfig.fonts[0] : templateConfig.fonts.body);
+        }
+        
+        // Apply colors
+        if (templateConfig.colors) {
+            document.documentElement.style.setProperty('--primary-color', templateConfig.colors.primary);
+            document.documentElement.style.setProperty('--secondary-color', templateConfig.colors.secondary);
+            document.documentElement.style.setProperty('--accent-color', templateConfig.colors.accent);
+            
+            // Update color RGB variables
+            const primaryRGB = hexToRgb(templateConfig.colors.primary);
+            const secondaryRGB = hexToRgb(templateConfig.colors.secondary);
+            const accentRGB = hexToRgb(templateConfig.colors.accent);
+            
+            if (primaryRGB) document.documentElement.style.setProperty('--primary-color-rgb', `${primaryRGB.r}, ${primaryRGB.g}, ${primaryRGB.b}`);
+            if (secondaryRGB) document.documentElement.style.setProperty('--secondary-color-rgb', `${secondaryRGB.r}, ${secondaryRGB.g}, ${secondaryRGB.b}`);
+            if (accentRGB) document.documentElement.style.setProperty('--accent-color-rgb', `${accentRGB.r}, ${accentRGB.g}, ${accentRGB.b}`);
+            
+            // Update color inputs
+            const primaryColor = document.getElementById('primaryColor');
+            const secondaryColor = document.getElementById('secondaryColor');
+            const accentColor = document.getElementById('accentColor');
+            
+            if (primaryColor) primaryColor.value = templateConfig.colors.primary;
+            if (secondaryColor) secondaryColor.value = templateConfig.colors.secondary;
+            if (accentColor) accentColor.value = templateConfig.colors.accent;
+        }
+        
+        // Apply styles
+        if (templateConfig.styles) {
+            if (templateConfig.styles.background) previewContainer.style.background = templateConfig.styles.background;
+            if (templateConfig.styles.padding) previewContainer.style.padding = templateConfig.styles.padding;
+            if (templateConfig.styles.border) previewContainer.style.border = templateConfig.styles.border;
+            if (templateConfig.styles.borderLeft) previewContainer.style.borderLeft = templateConfig.styles.borderLeft;
+            if (templateConfig.styles.outline) previewContainer.style.outline = templateConfig.styles.outline;
+            if (templateConfig.styles.borderRadius) previewContainer.style.borderRadius = templateConfig.styles.borderRadius;
+            if (templateConfig.styles.boxShadow) previewContainer.style.boxShadow = templateConfig.styles.boxShadow;
+            if (templateConfig.styles.color) previewContainer.style.color = templateConfig.styles.color;
+            
+            // Advanced styles
+            if (templateConfig.styles.backdropFilter) {
+                previewContainer.style.backdropFilter = templateConfig.styles.backdropFilter;
+                previewContainer.style.webkitBackdropFilter = templateConfig.styles.backdropFilter;
+            }
+        }
+        
+        // Apply template-specific effects after a small delay to ensure DOM updates
+        setTimeout(() => {
+            applyTemplateEffects(selectedTemplate, templateConfig);
+            // Update debug info if enabled
+            updateDebugInfo();
+        }, 100);
+        
+        console.log('Template applied successfully');
+        return true;
+    } catch (error) {
+        console.error('Error applying template:', error);
+        return false;
+    }
+}
+
+// Apply template-specific effects
+function applyTemplateEffects(templateName, templateConfig) {
+    console.log('Applying template effects for', templateName);
     const previewContainer = document.querySelector('.announcement-preview');
-    if (!previewContainer) {
-        console.error('Preview container not found');
-        return;
-    }
-
-    console.log('Applying template:', currentTemplate);
-
-    // Ensure template exists
-    if (!templates[currentTemplate]) {
-        console.error('Template not found:', currentTemplate);
-        showToast(`Template "${currentTemplate}" not found`, true);
-        currentTemplate = 'standard'; // Fall back to default
-    }
-
-    // Remove all template classes
-    const allTemplateClasses = Object.keys(templates).map(key => `template-${key}`);
-    allTemplateClasses.forEach(cls => {
-        previewContainer.classList.remove(cls);
-    });
-
-    // Add current template class
-    previewContainer.classList.add(`template-${currentTemplate}`);
+    if (!previewContainer) return;
     
-    // Reset any inline styles that might interfere with the template
-    previewContainer.style = '';
+    // Reset any existing effects
+    removeAllTemplateEffects(previewContainer);
     
-    // Get the template configuration
-    const templateConfig = templates[currentTemplate];
-    if (!templateConfig) {
-        console.error('Template config not found for:', currentTemplate);
-        return;
-    }
-
-    // Apply template colors if available
-    if (templateConfig.colors) {
-        const colors = templateConfig.colors;
-
-        // Update color pickers with template colors
-        const primaryColorPicker = document.querySelector('[data-target="primary"]');
-        const secondaryColorPicker = document.querySelector('[data-target="secondary"]');
-        const accentColorPicker = document.querySelector('[data-target="accent"]');
-
-        if (primaryColorPicker) primaryColorPicker.value = colors.primary;
-        if (secondaryColorPicker) secondaryColorPicker.value = colors.secondary;
-        if (accentColorPicker) accentColorPicker.value = colors.accent;
-
-        // Set CSS variables
-        document.documentElement.style.setProperty('--primary-color', colors.primary);
-        document.documentElement.style.setProperty('--secondary-color', colors.secondary);
-        document.documentElement.style.setProperty('--accent-color', colors.accent);
-
-        // Set RGB variables for effects
-        const primaryRgb = hexToRgb(colors.primary);
-        const secondaryRgb = hexToRgb(colors.secondary);
-        const accentRgb = hexToRgb(colors.accent);
-
-        if (primaryRgb) document.documentElement.style.setProperty('--primary-color-rgb', primaryRgb);
-        if (secondaryRgb) document.documentElement.style.setProperty('--secondary-color-rgb', secondaryRgb);
-        if (accentRgb) document.documentElement.style.setProperty('--accent-color-rgb', accentRgb);
-    }
-
-    // Apply template styles
-    if (templateConfig.styles) {
-        console.log('Applying template styles:', templateConfig.styles);
-        for (const [property, value] of Object.entries(templateConfig.styles)) {
-            previewContainer.style[property] = value;
+    // If no effects defined, return
+    if (!templateConfig || !templateConfig.effects) return;
+    
+    const effects = templateConfig.effects;
+    
+    try {
+        // Apply standard effects
+        if (effects.softShadow) {
+            previewContainer.style.boxShadow = '0 25px 50px -12px rgba(0, 0, 0, 0.15)';
         }
-    }
-
-    // Apply template specific effects
-    switch (currentTemplate) {
-        case '3d':
-            previewContainer.style.transformStyle = 'preserve-3d';
-            previewContainer.style.perspective = '1000px';
-            previewContainer.style.transform = 'rotateX(5deg) rotateY(-5deg)';
-            break;
-        case 'parallax':
-            initParallaxEffect();
-            break;
-        case 'neon':
-            addNeonGlowEffect();
-            break;
-        case 'paper':
-            addPaperTexture();
-            break;
-        case 'magazine':
-            setupMagazineStyle();
-            break;
-        case 'glassmorphism':
+        
+        if (effects.subtlePattern) {
+            const patternOverlay = document.createElement('div');
+            patternOverlay.className = 'pattern-overlay';
+            patternOverlay.style.position = 'absolute';
+            patternOverlay.style.top = '0';
+            patternOverlay.style.left = '0';
+            patternOverlay.style.width = '100%';
+            patternOverlay.style.height = '100%';
+            patternOverlay.style.opacity = '0.03';
+            patternOverlay.style.zIndex = '0';
+            patternOverlay.style.pointerEvents = 'none';
+            patternOverlay.style.backgroundImage = 'radial-gradient(var(--primary-color) 1px, transparent 1px)';
+            patternOverlay.style.backgroundSize = '20px 20px';
+            previewContainer.prepend(patternOverlay);
+        }
+        
+        // Apply minimal template effects
+        if (effects.cleanLines) {
+            const sections = previewContainer.querySelectorAll('.announcement-header, .announcement-body, .announcement-footer');
+            sections.forEach(section => {
+                section.style.position = 'relative';
+                section.style.zIndex = '1';
+            });
+            
+            previewContainer.style.letterSpacing = '0.3px';
+        }
+        
+        if (effects.thinBorders) {
+            const content = previewContainer.querySelector('.announcement-content');
+            if (content) {
+                content.style.borderTop = '1px solid rgba(var(--primary-color-rgb), 0.1)';
+                content.style.borderBottom = '1px solid rgba(var(--primary-color-rgb), 0.1)';
+                content.style.padding = '25px 0';
+                content.style.margin = '25px 0';
+            }
+        }
+        
+        // Apply vibrant template effects
+        if (effects.colorBurst) {
+            // Add color burst elements
+            const burstContainer = document.createElement('div');
+            burstContainer.className = 'color-burst-container';
+            burstContainer.style.position = 'absolute';
+            burstContainer.style.top = '0';
+            burstContainer.style.left = '0';
+            burstContainer.style.width = '100%';
+            burstContainer.style.height = '100%';
+            burstContainer.style.overflow = 'hidden';
+            burstContainer.style.zIndex = '0';
+            burstContainer.style.opacity = '0.05';
+            burstContainer.style.pointerEvents = 'none';
+            
+            // Add multiple color circles
+            const colors = [
+                'var(--primary-color)',
+                'var(--secondary-color)',
+                'var(--accent-color)'
+            ];
+            
+            for (let i = 0; i < 3; i++) {
+                const burst = document.createElement('div');
+                burst.className = 'color-burst';
+                burst.style.position = 'absolute';
+                burst.style.borderRadius = '50%';
+                burst.style.background = colors[i % colors.length];
+                
+                const size = Math.floor(Math.random() * 200) + 100;
+                burst.style.width = `${size}px`;
+                burst.style.height = `${size}px`;
+                
+                // Position randomly
+                burst.style.top = `${Math.floor(Math.random() * 100)}%`;
+                burst.style.left = `${Math.floor(Math.random() * 100)}%`;
+                burst.style.transform = 'translate(-50%, -50%)';
+                
+                burstContainer.appendChild(burst);
+            }
+            
+            previewContainer.prepend(burstContainer);
+        }
+        
+        if (effects.subtleAnimation) {
+            // Add subtle animations as a style element
+            if (!document.getElementById('subtle-animation-style')) {
+                const style = document.createElement('style');
+                style.id = 'subtle-animation-style';
+                style.textContent = `
+                    @keyframes float {
+                        0% { transform: translateY(0px); }
+                        50% { transform: translateY(-10px); }
+                        100% { transform: translateY(0px); }
+                    }
+                    
+                    @keyframes pulse {
+                        0% { transform: scale(1); }
+                        50% { transform: scale(1.05); }
+                        100% { transform: scale(1); }
+                    }
+                    
+                    .announcement-title {
+                        animation: float 6s ease-in-out infinite;
+                    }
+                    
+                    .announcement-logo {
+                        animation: pulse 4s ease-in-out infinite;
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+        }
+        
+        if (effects.accentCorners) {
+            // Add accent corners
+            const corners = ['top-left', 'top-right', 'bottom-right', 'bottom-left'];
+            corners.forEach(corner => {
+                const accentCorner = document.createElement('div');
+                accentCorner.className = `accent-corner accent-${corner}`;
+                accentCorner.style.position = 'absolute';
+                accentCorner.style.width = '20px';
+                accentCorner.style.height = '20px';
+                accentCorner.style.backgroundColor = 'var(--secondary-color)';
+                accentCorner.style.opacity = '0.3';
+                
+                if (corner === 'top-left') {
+                    accentCorner.style.top = '0';
+                    accentCorner.style.left = '0';
+                    accentCorner.style.borderTopLeftRadius = '0';
+                    accentCorner.style.borderBottomRightRadius = '100%';
+                } else if (corner === 'top-right') {
+                    accentCorner.style.top = '0';
+                    accentCorner.style.right = '0';
+                    accentCorner.style.borderTopRightRadius = '0';
+                    accentCorner.style.borderBottomLeftRadius = '100%';
+                } else if (corner === 'bottom-right') {
+                    accentCorner.style.bottom = '0';
+                    accentCorner.style.right = '0';
+                    accentCorner.style.borderBottomRightRadius = '0';
+                    accentCorner.style.borderTopLeftRadius = '100%';
+                } else if (corner === 'bottom-left') {
+                    accentCorner.style.bottom = '0';
+                    accentCorner.style.left = '0';
+                    accentCorner.style.borderBottomLeftRadius = '0';
+                    accentCorner.style.borderTopRightRadius = '100%';
+                }
+                
+                previewContainer.appendChild(accentCorner);
+            });
+        }
+        
+        // Enhanced modern effects
+        if (effects.floatingElements) {
+            const title = previewContainer.querySelector('.announcement-title');
+            const logo = previewContainer.querySelector('.announcement-logo');
+            
+            if (title) {
+                title.style.position = 'relative';
+                title.style.zIndex = '2';
+                title.style.transition = 'transform 0.3s ease';
+                
+                title.addEventListener('mouseover', function() {
+                    this.style.transform = 'translateY(-5px)';
+                });
+                
+                title.addEventListener('mouseout', function() {
+                    this.style.transform = 'translateY(0)';
+                });
+            }
+            
+            if (logo) {
+                logo.style.position = 'relative';
+                logo.style.zIndex = '2';
+                logo.style.transition = 'transform 0.3s ease';
+                
+                logo.addEventListener('mouseover', function() {
+                    this.style.transform = 'scale(1.1)';
+                });
+                
+                logo.addEventListener('mouseout', function() {
+                    this.style.transform = 'scale(1)';
+                });
+            }
+        }
+        
+        // Enhanced corporate effects
+        if (effects.enhancedSections) {
+            const sections = previewContainer.querySelectorAll('.announcement-header, .announcement-content, .announcement-footer');
+            sections.forEach((section, index) => {
+                section.style.position = 'relative';
+                section.style.zIndex = '1';
+                
+                // Add subtle top border to sections (except first)
+                if (index > 0) {
+                    section.style.borderTop = '1px solid rgba(var(--primary-color-rgb), 0.1)';
+                    section.style.paddingTop = '20px';
+                    section.style.marginTop = '20px';
+                }
+            });
+        }
+        
+        // Enhanced gradient effects
+        if (effects.glowingEdges) {
+            previewContainer.style.boxShadow = '0 25px 50px rgba(var(--secondary-color-rgb), 0.1), 0 0 0 1px rgba(var(--secondary-color-rgb), 0.05)';
+            
+            // Add glow on hover
+            previewContainer.style.transition = 'box-shadow 0.3s ease';
+            
+            previewContainer.addEventListener('mouseover', function() {
+                this.style.boxShadow = '0 30px 60px rgba(var(--secondary-color-rgb), 0.15), 0 0 0 2px rgba(var(--secondary-color-rgb), 0.1)';
+            });
+            
+            previewContainer.addEventListener('mouseout', function() {
+                this.style.boxShadow = '0 25px 50px rgba(var(--secondary-color-rgb), 0.1), 0 0 0 1px rgba(var(--secondary-color-rgb), 0.05)';
+            });
+        }
+        
+        // Enhanced glassmorphism effects
+        if (effects.depthLayers) {
+            // Add depth layers
+            const layers = ['back', 'middle', 'front'];
+            const elements = [
+                previewContainer.querySelector('.announcement-logo'),
+                previewContainer.querySelector('.announcement-title'),
+                previewContainer.querySelector('.announcement-content')
+            ];
+            
+            elements.forEach((element, index) => {
+                if (element) {
+                    element.style.position = 'relative';
+                    element.style.zIndex = (index + 1).toString();
+                    element.style.transition = 'transform 0.2s ease';
+                    
+                    // Add different transform amounts based on layer
+                    element.addEventListener('mouseover', function() {
+                        const moveAmount = (3 - index) * 5; // More movement for back elements
+                        this.style.transform = `translateY(-${moveAmount}px)`;
+                    });
+                    
+                    element.addEventListener('mouseout', function() {
+                        this.style.transform = 'translateY(0)';
+                    });
+                }
+            });
+        }
+        
+        // Enhanced neon effects
+        if (effects.neonGrid) {
+            if (!document.getElementById('neon-grid-style')) {
+                const style = document.createElement('style');
+                style.id = 'neon-grid-style';
+                style.textContent = `
+                    @keyframes neonGridMovement {
+                        0% {
+                            background-position: 0 0;
+                            opacity: 0.05;
+                        }
+                        50% {
+                            opacity: 0.15;
+                        }
+                        100% {
+                            background-position: 40px 40px;
+                            opacity: 0.05;
+                        }
+                    }
+                    
+                    .neon-grid {
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        right: 0;
+                        bottom: 0;
+                        background-image: 
+                            linear-gradient(rgba(var(--secondary-color-rgb), 0.3) 1px, transparent 1px),
+                            linear-gradient(90deg, rgba(var(--secondary-color-rgb), 0.3) 1px, transparent 1px);
+                        background-size: 20px 20px;
+                        z-index: 0;
+                        opacity: 0.05;
+                        animation: neonGridMovement 15s linear infinite;
+                        pointer-events: none;
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            const neonGrid = document.createElement('div');
+            neonGrid.className = 'neon-grid';
+            previewContainer.prepend(neonGrid);
+        }
+        
+        // Enhanced cinematic effects
+        if (effects.cinematicBars) {
+            const topBar = document.createElement('div');
+            topBar.className = 'cinematic-bar cinematic-bar-top';
+            topBar.style.position = 'absolute';
+            topBar.style.top = '0';
+            topBar.style.left = '0';
+            topBar.style.width = '100%';
+            topBar.style.height = '15px';
+            topBar.style.backgroundColor = '#000';
+            topBar.style.zIndex = '10';
+            
+            const bottomBar = document.createElement('div');
+            bottomBar.className = 'cinematic-bar cinematic-bar-bottom';
+            bottomBar.style.position = 'absolute';
+            bottomBar.style.bottom = '0';
+            bottomBar.style.left = '0';
+            bottomBar.style.width = '100%';
+            bottomBar.style.height = '15px';
+            bottomBar.style.backgroundColor = '#000';
+            bottomBar.style.zIndex = '10';
+            
+            previewContainer.appendChild(topBar);
+            previewContainer.appendChild(bottomBar);
+        }
+        
+        // Enhanced certificate effects
+        if (effects.decorativeBorders) {
+            // Add decorative border corners
+            const corners = ['top-left', 'top-right', 'bottom-right', 'bottom-left'];
+            corners.forEach(corner => {
+                const decorativeCorner = document.createElement('div');
+                decorativeCorner.className = `decorative-corner decorative-${corner}`;
+                decorativeCorner.style.position = 'absolute';
+                decorativeCorner.style.width = '30px';
+                decorativeCorner.style.height = '30px';
+                decorativeCorner.style.borderColor = 'var(--secondary-color)';
+                decorativeCorner.style.borderStyle = 'solid';
+                decorativeCorner.style.borderWidth = '0';
+                
+                if (corner === 'top-left') {
+                    decorativeCorner.style.top = '10px';
+                    decorativeCorner.style.left = '10px';
+                    decorativeCorner.style.borderTopWidth = '3px';
+                    decorativeCorner.style.borderLeftWidth = '3px';
+                } else if (corner === 'top-right') {
+                    decorativeCorner.style.top = '10px';
+                    decorativeCorner.style.right = '10px';
+                    decorativeCorner.style.borderTopWidth = '3px';
+                    decorativeCorner.style.borderRightWidth = '3px';
+                } else if (corner === 'bottom-right') {
+                    decorativeCorner.style.bottom = '10px';
+                    decorativeCorner.style.right = '10px';
+                    decorativeCorner.style.borderBottomWidth = '3px';
+                    decorativeCorner.style.borderRightWidth = '3px';
+                } else if (corner === 'bottom-left') {
+                    decorativeCorner.style.bottom = '10px';
+                    decorativeCorner.style.left = '10px';
+                    decorativeCorner.style.borderBottomWidth = '3px';
+                    decorativeCorner.style.borderLeftWidth = '3px';
+                }
+                
+                previewContainer.appendChild(decorativeCorner);
+            });
+        }
+        
+        // Apply template-specific effects
+        if (templateName === 'glassmorphism') {
             setupGlassmorphismEffect();
-            break;
-        default:
-            // Reset transform styles for other templates
-            previewContainer.style.transformStyle = '';
-            previewContainer.style.perspective = '';
-            previewContainer.style.transform = '';
-            break;
-    }
-
-    // Update color theme selection
-    const colorOptions = document.querySelectorAll('.color-option');
-    colorOptions.forEach(option => {
-        option.classList.remove('selected');
-
-        // Check if this option matches the current colors
-        const primaryColor = option.getAttribute('data-primary');
-        const secondaryColor = option.getAttribute('data-secondary');
-        const accentColor = option.getAttribute('data-accent');
-
-        const currentPrimaryColor = document.querySelector('[data-target="primary"]')?.value;
-        const currentSecondaryColor = document.querySelector('[data-target="secondary"]')?.value;
-        const currentAccentColor = document.querySelector('[data-target="accent"]')?.value;
-
-        if (primaryColor === currentPrimaryColor &&
-            secondaryColor === currentSecondaryColor &&
-            accentColor === currentAccentColor) {
-            option.classList.add('selected');
         }
-    });
+        
+        if (templateName === 'neon') {
+            addNeonGlowEffect();
+        }
+        
+        // Apply watermark effect
+        if (effects.watermark) {
+            const watermark = document.createElement('div');
+            watermark.className = 'watermark';
+            watermark.innerHTML = 'OFFICIAL DOCUMENT';
+            previewContainer.appendChild(watermark);
+            
+            // Add watermark styles if they don't exist
+            if (!document.getElementById('watermark-style')) {
+                const style = document.createElement('style');
+                style.id = 'watermark-style';
+                style.textContent = `
+                    .watermark {
+                        position: absolute;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%) rotate(-45deg);
+                        font-size: 6em;
+                        opacity: 0.06;
+                        font-weight: 900;
+                        color: var(--primary-color);
+                        pointer-events: none;
+                        white-space: nowrap;
+                        z-index: 0;
+                        font-family: 'Montserrat', sans-serif;
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+        }
+        
+        // Apply other effects only if they are defined
+        if (effects.emboss) {
+            const title = previewContainer.querySelector('.announcement-title');
+            if (title) {
+                title.style.textShadow = '0 1px 1px rgba(255,255,255,0.5), 0 -1px 1px rgba(0,0,0,0.2)';
+            }
+        }
+        
+        if (effects.flourish) {
+            const heading = previewContainer.querySelector('.announcement-heading');
+            if (heading) {
+                // Create flourish elements if they don't exist
+                if (!previewContainer.querySelector('.flourish-left')) {
+                    const flourishLeft = document.createElement('div');
+                    flourishLeft.className = 'flourish flourish-left';
+                    flourishLeft.innerHTML = '❦';
+                    heading.appendChild(flourishLeft);
+                }
+                
+                if (!previewContainer.querySelector('.flourish-right')) {
+                    const flourishRight = document.createElement('div');
+                    flourishRight.className = 'flourish flourish-right';
+                    flourishRight.innerHTML = '❦';
+                    heading.appendChild(flourishRight);
+                }
+                
+                // Add flourish styles if they don't exist
+                if (!document.getElementById('flourish-style')) {
+                    const style = document.createElement('style');
+                    style.id = 'flourish-style';
+                    style.textContent = `
+                        .flourish {
+                            position: absolute;
+                            font-size: 1.5em;
+                            color: var(--secondary-color);
+                            opacity: 0.7;
+                        }
+                        .flourish-left {
+                            left: -40px;
+                            top: 50%;
+                            transform: translateY(-50%);
+                        }
+                        .flourish-right {
+                            right: -40px;
+                            top: 50%;
+                            transform: translateY(-50%);
+                        }
+                    `;
+                    document.head.appendChild(style);
+                }
+            }
+        }
+        
+        // Update debug info
+        updateDebugInfo();
+        
+        console.log('Effects applied successfully');
+    } catch (error) {
+        console.error('Error applying template effects:', error);
+    }
+}
 
-    // Update preview with new template styling
-    updatePreview();
-    
-    // Debug info
-    console.log('Applied template:', currentTemplate);
-    console.log('Preview classes:', previewContainer.className);
-    console.log('Preview styles:', previewContainer.getAttribute('style'));
+// Remove all template effects safely
+function removeAllTemplateEffects(container) {
+    try {
+        if (!container) return;
+        
+        // Remove watermark
+        const watermark = container.querySelector('.watermark');
+        if (watermark) watermark.remove();
+        
+        // Remove flourishes
+        const flourishes = container.querySelectorAll('.flourish');
+        flourishes.forEach(flourish => flourish.remove());
+        
+        // Remove pattern overlay
+        const patternOverlay = container.querySelector('.pattern-overlay');
+        if (patternOverlay) patternOverlay.remove();
+        
+        // Remove drop cap class
+        const content = container.querySelector('.announcement-content');
+        if (content) content.classList.remove('drop-cap');
+        
+        // Remove grid background
+        const gridBackground = container.querySelector('.grid-background');
+        if (gridBackground) gridBackground.remove();
+        
+        // Remove gradient overlay
+        const gradientOverlay = container.querySelector('.gradient-overlay');
+        if (gradientOverlay) gradientOverlay.remove();
+        
+        // Remove certificate seal
+        const seal = container.querySelector('.certificate-seal');
+        if (seal) seal.remove();
+        
+        // Remove diagonal glow
+        const diagonalGlow = container.querySelector('.diagonal-glow');
+        if (diagonalGlow) diagonalGlow.remove();
+        
+        // Reset 3D transform
+        container.style.transform = '';
+        
+        // Remove neon effects
+        const neonEffects = container.querySelectorAll('.neon-grid, .neon-line, .neon-background');
+        neonEffects.forEach(effect => effect.remove());
+        
+        // Reset title styles for text gradient effect
+        const title = container.querySelector('.announcement-title');
+        if (title) {
+            title.style.background = '';
+            title.style.webkitBackgroundClip = '';
+            title.style.backgroundClip = '';
+            title.style.webkitTextFillColor = '';
+            title.style.display = '';
+            title.style.textShadow = '';
+            title.classList.remove('neon-flicker');
+            title.style.animation = '';
+        }
+        
+        // Reset other elements that might have special effects
+        const logo = container.querySelector('.announcement-logo');
+        if (logo) {
+            logo.style.boxShadow = '';
+            logo.style.border = '';
+            logo.style.animation = '';
+        }
+        
+        const date = container.querySelector('.announcement-date');
+        if (date) {
+            date.style.textShadow = '';
+            date.style.animation = '';
+        }
+        
+    } catch (error) {
+        console.error('Error removing template effects:', error);
+    }
+}
+
+// Update preview content with form values
+function updatePreview() {
+    try {
+        console.log('Updating preview');
+        
+        // Get form data
+        const formData = getCurrentFormData();
+        
+        // Update title
+        const titleElement = document.getElementById('announcementTitle');
+        if (titleElement && formData.title) {
+            titleElement.textContent = formData.title;
+        }
+        
+        // Update date
+        const dateElement = document.getElementById('announcementDate');
+        if (dateElement && formData.date) {
+            const dateLabel = currentLanguage === 'assamese' ? 'তাৰিখ:' : 'Date:';
+            dateElement.textContent = `${dateLabel} ${formData.date}`;
+        }
+        
+        // Update content
+        const contentElement = document.getElementById('announcementContent');
+        if (contentElement && formData.content) {
+            contentElement.textContent = formData.content;
+        }
+        
+        // Update logo
+        const logoElement = document.getElementById('announcementLogo');
+        if (logoElement && formData.logoText) {
+            if (!customLogoLoaded) {
+                logoElement.textContent = formData.logoText;
+                logoElement.classList.remove('has-image');
+            }
+        }
+        
+        // Update signer info
+        const signerNameElement = document.querySelector('.signer-name');
+        if (signerNameElement && formData.signerName) {
+            signerNameElement.textContent = formData.signerName;
+        }
+        
+        const signerTitleElement = document.querySelector('.signer-title');
+        if (signerTitleElement && formData.signerTitle) {
+            signerTitleElement.textContent = formData.signerTitle;
+        }
+        
+        const contactInfoElement = document.querySelector('.contact-info');
+        if (contactInfoElement && formData.contactInfo) {
+            contactInfoElement.textContent = formData.contactInfo;
+        }
+        
+        // Apply template and layout
+        applyTemplate();
+        applyLayout(currentLayout);
+        
+        console.log('Preview updated successfully');
+    } catch (error) {
+        console.error('Error updating preview:', error);
+    }
 }
 
 // Apply layout class to preview
-function applyLayout() {
-    const previewContainer = document.querySelector('.announcement-preview');
+function applyLayout(layout) {
+    console.log('Applying layout:', layout);
+    
+    // Get the preview container
+    const previewContainer = document.querySelector('.preview-container');
     if (!previewContainer) {
         console.error('Preview container not found');
         return;
     }
     
-    console.log('Applying layout:', currentLayout);
+    // Remove existing layout classes
+    const layoutClasses = [
+        'layout-default', 
+        'layout-split', 
+        'layout-f-pattern', 
+        'layout-magazine-split', 
+        'layout-business-card',
+        'layout-grid',
+        'layout-timeline',
+        'layout-card-grid',
+        'layout-centered', // Added missing layout
+        'layout-card' // Added missing layout
+    ];
     
-    // Ensure layout exists
-    if (!layouts[currentLayout]) {
-        console.error('Layout not found:', currentLayout);
-        showToast(`Layout "${currentLayout}" not found`, true);
-        currentLayout = 'default'; // Fall back to default
-    }
-    
-    // Remove all layout classes
-    const layoutClasses = ['layout-default', 'layout-centered', 'layout-split', 'layout-card', 'layout-magazine-split', 'layout-grid', 'layout-hero'];
-    layoutClasses.forEach(cls => {
-        previewContainer.classList.remove(cls);
+    layoutClasses.forEach(layoutClass => {
+        previewContainer.classList.remove(layoutClass);
     });
     
-    // Add selected layout class
-    previewContainer.classList.add(`layout-${currentLayout}`);
+    // Add new layout class based on currentLayout
+    const layoutClass = 'layout-' + layout;
+    previewContainer.classList.add(layoutClass);
     
-    // Get the content element
-    const content = previewContainer.querySelector('.announcement-content');
-    if (!content) {
-        console.error('Content element not found');
-        return;
+    // Initialize layout-specific features
+    try {
+        // Clean up existing layout elements
+        const existingLayoutElements = previewContainer.querySelectorAll('.layout-element');
+        existingLayoutElements.forEach(element => {
+            element.remove();
+        });
+        
+        // Apply layout-specific initialization
+        switch(layout) {
+            case 'default':
+                // Default layout doesn't need special initialization
+                break;
+            case 'centered':
+                // Apply centered layout styles
+                setupCenteredLayout();
+                break;
+            case 'split':
+                setupSplitLayout();
+                break;
+            case 'f-pattern':
+                setupFPatternLayout();
+                break;
+            case 'magazine-split':
+                setupMagazineSplitLayout();
+                break;
+            case 'business-card':
+                setupBusinessCardLayout();
+                break;
+            case 'card':
+                // Setup basic card layout
+                setupCardLayout();
+                break;
+            case 'grid':
+                setupGridLayout();
+                break;
+            case 'timeline':
+                setupTimelineLayout();
+                break;
+            case 'card-grid':
+                setupCardGridLayout();
+                break;
+        }
+        
+        console.log('Layout applied successfully:', layout);
+        } catch (error) {
+        console.error('Error applying layout:', error);
     }
-    
-    // Reset any layout specific classes on content
-    content.className = 'announcement-content';
-    
-    // Apply special layout effects based on selected layout
-    switch (currentLayout) {
-        case 'magazine-split':
-            setupMagazineSplitLayout();
-            break;
-        case 'grid':
-            setupGridLayout();
-            break;
-        case 'hero':
-            setupHeroLayout();
-            break;
-        case 'centered':
-        case 'split':
-        case 'card':
-            // These layouts are handled purely by CSS classes
-            // First reset any complex layout structures
-            if (content) {
-                // Only reset if there are special layout elements
-                if (content.querySelector('.magazine-column-left') || 
-                    content.querySelector('.grid-container')) {
-                    
-                    // Get the raw content and reformat it
-                    const contentText = content.textContent;
-                    
-                    // Format it properly with paragraphs
-                    const formattedContent = contentText
-                        .split('\n\n')
-                        .filter(para => para.trim() !== '')
-                        .map(para => `<p>${para.replace(/\n/g, '<br>')}</p>`)
-                        .join('');
-                    
-                    // Update the content
-                    content.innerHTML = formattedContent;
-                }
-            }
-            break;
-        default:
-            // Reset any specific layout effects for other layouts
-            if (content) {
-                // Restore original content structure if it was modified by specific layouts
-                if (content.querySelector('.magazine-column-left') || 
-                    content.querySelector('.grid-container')) {
-                    
-                    // Get the raw content without special layout elements
-                    const contentText = content.textContent;
-                    
-                    // Format it properly with paragraphs
-                    const formattedContent = contentText
-                        .split('\n\n')
-                        .filter(para => para.trim() !== '')
-                        .map(para => `<p>${para.replace(/\n/g, '<br>')}</p>`)
-                        .join('');
-                    
-                    // Update the content
-                    content.innerHTML = formattedContent;
-                }
-            }
-            
-            // Remove any layout-specific elements
-            const overlays = previewContainer.querySelectorAll('.hero-overlay, .grid-container');
-            overlays.forEach(overlay => overlay.remove());
-            break;
-    }
-    
-    // Update preview with updated layout
-    updatePreview();
-    
-    // Debug info
-    console.log('Applied layout:', currentLayout);
-    console.log('Preview classes after layout:', previewContainer.className);
 }
 
 // Setup special layouts
@@ -722,954 +1298,975 @@ function setupMagazineSplitLayout() {
     
     console.log('Setting up magazine-split layout');
     
-    // Create columns for magazine split layout
-    content.innerHTML = `<div class="magazine-column-left">${content.innerHTML}</div><div class="magazine-column-right"></div>`;
+    // Store original content for possible restoration
+    const originalContent = content.innerHTML;
     
-    // Move some elements to right column
-    const rightColumn = content.querySelector('.magazine-column-right');
-    const leftColumn = content.querySelector('.magazine-column-left');
-    
-    if (!rightColumn || !leftColumn) {
-        console.error('Magazine columns not created properly');
-        return;
-    }
-    
-    const paragraphs = leftColumn.querySelectorAll('p');
-    if (paragraphs.length > 2) {
-        // Move half of paragraphs to right column
-        for (let i = Math.ceil(paragraphs.length / 2); i < paragraphs.length; i++) {
-            rightColumn.appendChild(paragraphs[i]);
+    try {
+        // Create a more modern magazine split layout
+        const magazineContainer = document.createElement('div');
+        magazineContainer.className = 'magazine-container layout-element';
+        magazineContainer.style.display = 'flex';
+        magazineContainer.style.gap = '35px';
+        magazineContainer.style.position = 'relative';
+        
+        // Create fancy title area that spans both columns
+        const titleArea = document.createElement('div');
+        titleArea.className = 'magazine-title-area layout-element';
+        titleArea.style.marginBottom = '30px';
+        titleArea.style.borderBottom = '2px solid var(--secondary-color)';
+        titleArea.style.paddingBottom = '20px';
+        titleArea.style.display = 'flex';
+        titleArea.style.alignItems = 'center';
+        titleArea.style.justifyContent = 'space-between';
+        
+        // Add decorative elements to title area
+        const titleDecoration = document.createElement('div');
+        titleDecoration.className = 'magazine-title-decoration layout-element';
+        titleDecoration.style.width = '80px';
+        titleDecoration.style.height = '8px';
+        titleDecoration.style.backgroundColor = 'var(--accent-color)';
+        titleDecoration.style.marginRight = '20px';
+        
+        const titleHeading = document.createElement('h3');
+        titleHeading.className = 'magazine-heading layout-element';
+        titleHeading.textContent = 'Featured Article';
+        titleHeading.style.margin = '0';
+        titleHeading.style.flex = '1';
+        titleHeading.style.fontFamily = 'var(--heading-font)';
+        titleHeading.style.fontSize = '1.4rem';
+        
+        titleArea.appendChild(titleDecoration);
+        titleArea.appendChild(titleHeading);
+        
+        // Create columns wrapper
+        const columnsWrapper = document.createElement('div');
+        columnsWrapper.className = 'magazine-columns-wrapper layout-element';
+        columnsWrapper.style.display = 'flex';
+        columnsWrapper.style.gap = '35px';
+        
+        // Create left column with enhanced styling
+        const leftColumn = document.createElement('div');
+        leftColumn.className = 'magazine-column-left layout-element';
+        leftColumn.style.flex = '1';
+        leftColumn.style.minWidth = '0'; // Prevent overflow
+        leftColumn.style.position = 'relative';
+        leftColumn.style.paddingRight = '35px';
+        leftColumn.style.borderRight = '1px solid rgba(var(--primary-color-rgb), 0.1)';
+        
+        // Create right column with enhanced styling
+        const rightColumn = document.createElement('div');
+        rightColumn.className = 'magazine-column-right layout-element';
+        rightColumn.style.flex = '1';
+        rightColumn.style.minWidth = '0'; // Prevent overflow
+        rightColumn.style.position = 'relative';
+        
+        // Parse existing content for paragraphs
+        const paragraphs = content.querySelectorAll('p');
+        
+        // Create drop cap for first paragraph
+        if (paragraphs.length > 0) {
+            const firstParagraph = paragraphs[0].cloneNode(true);
+            const firstParagraphText = firstParagraph.textContent;
+            
+            if (firstParagraphText.length > 0) {
+                const firstLetter = firstParagraphText.charAt(0);
+                const restOfText = firstParagraphText.substring(1);
+                
+                const dropCap = document.createElement('span');
+                dropCap.className = 'magazine-drop-cap';
+                dropCap.textContent = firstLetter;
+                dropCap.style.float = 'left';
+                dropCap.style.fontSize = '3.5em';
+                dropCap.style.lineHeight = '0.8';
+                dropCap.style.paddingRight = '8px';
+                dropCap.style.paddingTop = '4px';
+                dropCap.style.color = 'var(--secondary-color)';
+                dropCap.style.fontWeight = 'bold';
+                dropCap.style.fontFamily = 'var(--heading-font)';
+                
+                const newFirstParagraph = document.createElement('p');
+                newFirstParagraph.appendChild(dropCap);
+                newFirstParagraph.appendChild(document.createTextNode(restOfText));
+                newFirstParagraph.style.marginTop = '0';
+                newFirstParagraph.style.fontSize = '1.1em';
+                newFirstParagraph.style.lineHeight = '1.7';
+                
+                leftColumn.appendChild(newFirstParagraph);
+            } else {
+                leftColumn.appendChild(firstParagraph.cloneNode(true));
+            }
         }
-    }
-}
-
-function setupGridLayout() {
-    const preview = document.querySelector('.announcement-preview');
-    const content = preview?.querySelector('.announcement-content');
-    
-    if (!preview || !content) {
-        console.error('Preview or content elements not found for grid layout');
-        return;
-    }
-    
-    console.log('Setting up grid layout');
-    
-    // Create grid container
-    content.classList.add('grid-container');
-    
-    // Add grid classes to paragraphs
-    const paragraphs = content.querySelectorAll('p');
-    paragraphs.forEach((p, index) => {
-        p.classList.add('grid-item');
-        p.classList.add(`grid-item-${index + 1}`);
-    });
-}
-
-function setupHeroLayout() {
-    const preview = document.querySelector('.announcement-preview');
-    const title = preview?.querySelector('.announcement-title');
-    
-    if (!preview || !title) {
-        console.error('Preview or title elements not found for hero layout');
-        return;
-    }
-    
-    console.log('Setting up hero layout');
-    
-    // Make title larger for hero layout
-    title.classList.add('hero-title');
-    
-    // Add background overlay for better contrast if it doesn't exist already
-    if (!preview.querySelector('.hero-overlay')) {
-        const overlay = document.createElement('div');
-        overlay.className = 'hero-overlay';
-        preview.insertBefore(overlay, preview.firstChild);
-    }
-}
-
-// Special template effects
-function initParallaxEffect() {
-    const preview = document.querySelector('.announcement-preview');
-    if (!preview) {
-        console.error('Preview element not found for parallax effect');
-        return;
-    }
-    
-    console.log('Setting up parallax effect');
-    
-    // Create layers for parallax effect
-    const title = preview.querySelector('.announcement-title');
-    const content = preview.querySelector('.announcement-content');
-    
-    if (!title || !content) {
-        console.error('Title or content elements not found for parallax effect');
-        return;
-    }
-    
-    title.classList.add('parallax-layer', 'parallax-layer-back');
-    content.classList.add('parallax-layer', 'parallax-layer-front');
-    
-    // Add parallax mouse move event
-    preview.addEventListener('mousemove', (e) => {
-        const x = e.clientX / window.innerWidth;
-        const y = e.clientY / window.innerHeight;
         
-        title.style.transform = `translate(${x * 20}px, ${y * 20}px)`;
-        content.style.transform = `translate(${x * 10}px, ${y * 10}px)`;
-    });
-}
-
-function addNeonGlowEffect() {
-    const preview = document.querySelector('.announcement-preview');
-    if (!preview) {
-        console.error('Preview element not found for neon effect');
-        return;
-    }
-    
-    console.log('Adding neon glow effect');
-    
-    const title = preview.querySelector('.announcement-title');
-    
-    if (!title) {
-        console.error('Title element not found for neon effect');
-        return;
-    }
-    
-    title.classList.add('neon-text');
-    
-    // Animate neon flicker
-    setTimeout(() => {
-        title.classList.add('neon-flicker');
-    }, 2000);
-}
-
-function addPaperTexture() {
-    const preview = document.querySelector('.announcement-preview');
-    if (!preview) {
-        console.error('Preview element not found for paper texture');
-        return;
-    }
-    
-    console.log('Adding paper texture');
-    
-    // Check if paper texture already exists
-    if (!preview.querySelector('.paper-texture')) {
-        // Add paper texture overlay
-        const texture = document.createElement('div');
-        texture.className = 'paper-texture';
-        preview.appendChild(texture);
+        // Add a decorative quote box to improve visual appeal
+        const quoteBox = document.createElement('div');
+        quoteBox.className = 'magazine-quote-box layout-element';
+        quoteBox.style.margin = '25px 0';
+        quoteBox.style.padding = '25px';
+        quoteBox.style.backgroundColor = 'rgba(var(--secondary-color-rgb), 0.08)';
+        quoteBox.style.borderLeft = '4px solid var(--secondary-color)';
+        quoteBox.style.fontStyle = 'italic';
+        quoteBox.style.fontSize = '1.1em';
+        quoteBox.style.lineHeight = '1.6';
+        quoteBox.style.position = 'relative';
         
-        // Add slight rotation for realistic paper effect
-        preview.style.transform = 'rotate(0.5deg)';
-    }
-}
-
-function setupMagazineStyle() {
-    const preview = document.querySelector('.announcement-preview');
-    if (!preview) {
-        console.error('Preview element not found for magazine style');
-        return;
-    }
-    
-    console.log('Setting up magazine style');
-    
-    const title = preview.querySelector('.announcement-title');
-    const content = preview.querySelector('.announcement-content');
-    
-    if (!title || !content) {
-        console.error('Title or content elements not found for magazine style');
-        return;
-    }
-    
-    // Create magazine style header
-    title.classList.add('magazine-title');
-    
-    // Style first paragraph as magazine lead
-    const firstP = content.querySelector('p');
-    if (firstP) {
-        firstP.classList.add('magazine-lead');
-    }
-}
-
-// Set default values
-function setDefaults() {
-    // Set current date as default
-    const dateInput = document.getElementById('dateInput');
-    if (dateInput) {
-        const today = new Date();
-        const formattedDate = today.toISOString().substring(0, 10);
-        dateInput.value = formattedDate;
+        // Add quote marks
+        const quoteIcon = document.createElement('span');
+        quoteIcon.innerHTML = '&ldquo;';
+        quoteIcon.style.position = 'absolute';
+        quoteIcon.style.top = '-15px';
+        quoteIcon.style.left = '10px';
+        quoteIcon.style.fontSize = '3em';
+        quoteIcon.style.color = 'rgba(var(--secondary-color-rgb), 0.2)';
+        quoteIcon.style.fontFamily = 'Georgia, serif';
         
-        // Also update the date in the preview
-        const dateEl = document.getElementById('announcementDate');
-        if (dateEl) {
-            const displayDate = today.toLocaleDateString(
-                currentLanguage === 'assamese' ? 'as-IN' : 'en-US',
-                {year: 'numeric', month: 'long', day: 'numeric'}
-            );
-            dateEl.textContent = `Date: ${displayDate}`;
+        quoteBox.appendChild(quoteIcon);
+        
+        // Add a quote from one of the middle paragraphs, or default text
+        if (paragraphs.length > 2) {
+            quoteBox.appendChild(document.createTextNode(paragraphs[2].textContent));
+        } else {
+            quoteBox.appendChild(document.createTextNode('A notable quote or highlight from your announcement would go here, drawing attention to key points.'));
         }
-    }
-    
-    // Set default template and layout
-    const templateSelector = document.getElementById('templateSelector');
-    if (templateSelector) {
-        templateSelector.value = 'standard';
-        currentTemplate = 'standard';
-    }
-    
-    const layoutSelector = document.getElementById('layoutSelector');
-    if (layoutSelector) {
-        layoutSelector.value = 'default';
-        currentLayout = 'default';
-    }
-    
-    // Set default colors
-    const primaryColorPicker = document.querySelector('[data-target="primary"]');
-    const secondaryColorPicker = document.querySelector('[data-target="secondary"]');
-    const accentColorPicker = document.querySelector('[data-target="accent"]');
-    
-    if (primaryColorPicker && secondaryColorPicker && accentColorPicker) {
-        const defaultColors = templates['standard'].colors;
         
-        primaryColorPicker.value = defaultColors.primary;
-        secondaryColorPicker.value = defaultColors.secondary;
-        accentColorPicker.value = defaultColors.accent;
+        // Balance paragraphs between columns for better readability
+        const totalParagraphs = paragraphs.length;
         
-        document.documentElement.style.setProperty('--primary-color', defaultColors.primary);
-        document.documentElement.style.setProperty('--secondary-color', defaultColors.secondary);
-        document.documentElement.style.setProperty('--accent-color', defaultColors.accent);
+        // Skip the first paragraph as it's already added with drop cap
+        let leftColumnParagraphs = Math.ceil((totalParagraphs - 1) / 2);
+        let rightColumnParagraphs = totalParagraphs - 1 - leftColumnParagraphs;
         
-        // Update RGB variables for shadow effects
-        const primaryRgb = hexToRgb(defaultColors.primary);
-        const secondaryRgb = hexToRgb(defaultColors.secondary);
-        const accentRgb = hexToRgb(defaultColors.accent);
+        // Make sure right column gets at least one paragraph
+        if (rightColumnParagraphs < 1 && totalParagraphs > 1) {
+            leftColumnParagraphs -= 1;
+            rightColumnParagraphs += 1;
+        }
         
-        if (primaryRgb) document.documentElement.style.setProperty('--primary-color-rgb', primaryRgb);
-        if (secondaryRgb) document.documentElement.style.setProperty('--secondary-color-rgb', secondaryRgb);
-        if (accentRgb) document.documentElement.style.setProperty('--accent-color-rgb', accentRgb);
+        // Add paragraphs to left column (skipping the already added first paragraph)
+        for (let i = 1; i <= leftColumnParagraphs; i++) {
+            if (i < paragraphs.length) {
+                const paragraph = paragraphs[i].cloneNode(true);
+                paragraph.style.lineHeight = '1.7';
+                leftColumn.appendChild(paragraph);
+            }
+        }
+        
+        // Add the quote box after a few paragraphs in the left column
+        if (leftColumnParagraphs >= 1) {
+            leftColumn.appendChild(quoteBox);
+        } else {
+            rightColumn.appendChild(quoteBox);
+        }
+        
+        // Add paragraphs to right column
+        const startRightIndex = leftColumnParagraphs + 1; // +1 for 0-index
+        for (let i = 0; i < rightColumnParagraphs; i++) {
+            if (startRightIndex + i < paragraphs.length) {
+                const paragraph = paragraphs[startRightIndex + i].cloneNode(true);
+                paragraph.style.lineHeight = '1.7';
+                rightColumn.appendChild(paragraph);
+            }
+        }
+        
+        // Add a visual separator to right column
+        const separator = document.createElement('div');
+        separator.className = 'magazine-separator layout-element';
+        separator.style.width = '40px';
+        separator.style.height = '4px';
+        separator.style.backgroundColor = 'var(--secondary-color)';
+        separator.style.margin = '25px 0';
+        
+        // Add separator at the beginning of right column for visual interest
+        if (rightColumn.firstChild) {
+            rightColumn.insertBefore(separator, rightColumn.firstChild);
+        } else {
+            rightColumn.appendChild(separator);
+        }
+        
+        // Add a read more link at the end of right column
+        const readMore = document.createElement('div');
+        readMore.className = 'magazine-read-more layout-element';
+        readMore.style.marginTop = '30px';
+        readMore.style.paddingTop = '15px';
+        readMore.style.borderTop = '1px solid rgba(var(--primary-color-rgb), 0.1)';
+        readMore.style.textAlign = 'right';
+        readMore.style.fontStyle = 'italic';
+        readMore.style.fontSize = '0.9em';
+        readMore.innerHTML = 'Continued on next page...';
+        
+        rightColumn.appendChild(readMore);
+        
+        // Assemble the layout
+        columnsWrapper.appendChild(leftColumn);
+        columnsWrapper.appendChild(rightColumn);
+        
+        magazineContainer.appendChild(titleArea);
+        magazineContainer.appendChild(columnsWrapper);
+        
+        // Replace the content with our magazine layout
+        content.innerHTML = '';
+        content.appendChild(magazineContainer);
+        
+        // Add responsive styling for mobile
+        if (!document.getElementById('magazine-responsive-style')) {
+            const style = document.createElement('style');
+            style.id = 'magazine-responsive-style';
+            style.textContent = `
+                @media (max-width: 768px) {
+                    .magazine-columns-wrapper {
+                        flex-direction: column;
+                        gap: 20px;
+                    }
+                    
+                    .magazine-column-left {
+                        padding-right: 0 !important;
+                        border-right: none !important;
+                        border-bottom: 1px solid rgba(var(--primary-color-rgb), 0.1);
+                        padding-bottom: 20px;
+                    }
+                    
+                    .magazine-quote-box {
+                        margin: 20px 0 !important;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        console.log('Magazine split layout setup complete');
+    } catch (error) {
+        console.error('Error setting up magazine split layout:', error);
+        // Restore original content
+        content.innerHTML = originalContent;
     }
-    
-    // Set default color theme option as selected
-    const colorOptions = document.querySelectorAll('.color-option');
-    colorOptions.forEach(option => option.classList.remove('selected'));
-    const defaultColorOption = document.querySelector('.color-option[data-theme="default"]');
-    if (defaultColorOption) {
-        defaultColorOption.classList.add('selected');
-    }
-    
-    // Set default notice type
-    const noticeType = document.getElementById('noticeType');
-    if (noticeType) {
-        noticeType.textContent = 'ANNOUNCEMENT';
-    }
-    
-    // Set default title and content if they're empty
-    const titleInput = document.getElementById('titleInput');
-    if (titleInput && !titleInput.value) {
-        titleInput.value = 'Important Announcement';
-        const titleEl = document.getElementById('announcementTitle');
-        if (titleEl) titleEl.textContent = 'Important Announcement';
-    }
-    
-    const contentInput = document.getElementById('contentInput');
-    if (contentInput && !contentInput.value) {
-        contentInput.value = 'We are excited to announce some important changes taking place in our organization.';
-        const contentEl = document.getElementById('announcementContent');
-        if (contentEl) contentEl.innerHTML = '<p>We are excited to announce some important changes taking place in our organization.</p>';
-    }
-    
-    // Set default logo text
-    const logoTextInput = document.getElementById('logoTextInput');
-    if (logoTextInput && !logoTextInput.value) {
-        logoTextInput.value = 'RB';
-        const logoEl = document.getElementById('announcementLogo');
-        if (logoEl) logoEl.innerHTML = 'RB';
-    }
-    
-    // Set default signer info
-    const signerNameInput = document.getElementById('signerNameInput');
-    if (signerNameInput && !signerNameInput.value) {
-        signerNameInput.value = 'John Doe';
-        const signerNameEl = document.getElementById('announcementSignerName');
-        if (signerNameEl) signerNameEl.textContent = 'John Doe';
-    }
-    
-    const signerTitleInput = document.getElementById('signerTitleInput');
-    if (signerTitleInput && !signerTitleInput.value) {
-        signerTitleInput.value = 'Director';
-        const signerTitleEl = document.getElementById('announcementSignerTitle');
-        if (signerTitleEl) signerTitleEl.textContent = 'Director';
-    }
-    
-    const contactInfoInput = document.getElementById('contactInfoInput');
-    if (contactInfoInput && !contactInfoInput.value) {
-        contactInfoInput.value = 'Email: example@email.com | Phone: 555-1234';
-        const contactInfoEl = document.getElementById('announcementContactInfo');
-        if (contactInfoEl) contactInfoEl.textContent = 'Email: example@email.com | Phone: 555-1234';
-    }
-    
-    // Apply template and layout
-    applyTemplate();
-    applyLayout();
+}
+
+function setupFPatternLayout() {
+    // ... existing code ...
 }
 
 // Reset form to defaults
 function resetForm() {
-    // Reset template
+    console.log('Resetting form');
+    
+    // Reset the form element
+    const form = document.getElementById('announcementForm');
+    if (form) {
+        form.reset();
+    }
+    
+    // Reset custom logo
+    customLogoLoaded = false;
+    const logoElement = document.getElementById('announcementLogo');
+    if (logoElement) {
+        logoElement.style.backgroundImage = '';
+        logoElement.classList.remove('has-image');
+    }
+    
+    // Reset template and layout to defaults
     const templateSelector = document.getElementById('templateSelector');
     if (templateSelector) {
         templateSelector.value = 'standard';
         currentTemplate = 'standard';
     }
     
-    // Reset layout
     const layoutSelector = document.getElementById('layoutSelector');
     if (layoutSelector) {
         layoutSelector.value = 'default';
         currentLayout = 'default';
     }
     
-    // Reset preset selector
-    const presetSelector = document.getElementById('presetSelector');
-    if (presetSelector) {
-        presetSelector.value = '';
-    }
-    
-    // Reset form inputs
-    const titleInput = document.getElementById('titleInput');
-    const contentInput = document.getElementById('contentInput');
-    const dateInput = document.getElementById('dateInput');
-    const signerNameInput = document.getElementById('signerNameInput');
-    const signerTitleInput = document.getElementById('signerTitleInput');
-    const contactInfoInput = document.getElementById('contactInfoInput');
-    const logoTextInput = document.getElementById('logoTextInput');
-    
-    if (titleInput) titleInput.value = 'Important Announcement';
-    if (contentInput) contentInput.value = 'We are excited to announce some important changes taking place in our organization.';
-    if (dateInput) {
-        const today = new Date();
-        const formattedDate = today.toISOString().substring(0, 10);
-        dateInput.value = formattedDate;
-    }
-    if (signerNameInput) signerNameInput.value = 'John Doe';
-    if (signerTitleInput) signerTitleInput.value = 'Director';
-    if (contactInfoInput) contactInfoInput.value = 'Email: example@email.com | Phone: 555-1234';
-    if (logoTextInput) logoTextInput.value = 'RB';
-    
-    // Reset logo
-    const logoEl = document.getElementById('announcementLogo');
-    if (logoEl) {
-        logoEl.innerHTML = 'RB';
-        logoEl.classList.remove('has-image');
-        customLogoLoaded = false;
-    }
-    
-    // Reset logo upload input
-    const logoUpload = document.getElementById('logoUpload');
-    if (logoUpload) {
-        logoUpload.value = '';
-    }
-    
-    // Reset color theme to default
-    const defaultColors = templates['standard'].colors;
-    
-    // Update color pickers
-    const primaryColorPicker = document.querySelector('[data-target="primary"]');
-    const secondaryColorPicker = document.querySelector('[data-target="secondary"]');
-    const accentColorPicker = document.querySelector('[data-target="accent"]');
-    
-    if (primaryColorPicker) primaryColorPicker.value = defaultColors.primary;
-    if (secondaryColorPicker) secondaryColorPicker.value = defaultColors.secondary;
-    if (accentColorPicker) accentColorPicker.value = defaultColors.accent;
-    
-    // Update CSS variables
-    document.documentElement.style.setProperty('--primary-color', defaultColors.primary);
-    document.documentElement.style.setProperty('--secondary-color', defaultColors.secondary);
-    document.documentElement.style.setProperty('--accent-color', defaultColors.accent);
-    
-    // Reset RGB variables
-    const primaryRgb = hexToRgb(defaultColors.primary);
-    const secondaryRgb = hexToRgb(defaultColors.secondary);
-    const accentRgb = hexToRgb(defaultColors.accent);
-    
-    if (primaryRgb) document.documentElement.style.setProperty('--primary-color-rgb', primaryRgb);
-    if (secondaryRgb) document.documentElement.style.setProperty('--secondary-color-rgb', secondaryRgb);
-    if (accentRgb) document.documentElement.style.setProperty('--accent-color-rgb', accentRgb);
-    
-    // Reset color theme selection
-    const colorOptions = document.querySelectorAll('.color-option');
-    colorOptions.forEach(option => option.classList.remove('selected'));
+    // Reset color theme
     const defaultColorOption = document.querySelector('.color-option[data-theme="default"]');
     if (defaultColorOption) {
+        const colorOptions = document.querySelectorAll('.color-option');
+        colorOptions.forEach(option => option.classList.remove('selected'));
         defaultColorOption.classList.add('selected');
     }
     
+    // Reset color pickers
+    document.getElementById('primaryColor').value = '#2a3b4c';
+    document.getElementById('secondaryColor').value = '#ce8e2c';
+    document.getElementById('accentColor').value = '#134e65';
+    
     // Reset language
-    currentLanguage = 'english';
-    const languageOptions = document.querySelectorAll('.language-option');
-    languageOptions.forEach(opt => opt.classList.remove('active'));
     const englishOption = document.querySelector('.language-option[data-lang="english"]');
-    if (englishOption) englishOption.classList.add('active');
+    if (englishOption) {
+        const languageOptions = document.querySelectorAll('.language-option');
+        languageOptions.forEach(option => option.classList.remove('active'));
+        englishOption.classList.add('active');
+        currentLanguage = 'english';
+        toggleLanguage('english');
+    }
     
-    // Apply template and layout
-    applyTemplate();
-    applyLayout();
+    // Set default values
+    setDefaults();
     
-    // Update preview with defaults
+    // Update the preview
     updatePreview();
     
+    console.log('Form reset complete');
     showToast('Form has been reset to defaults');
 }
 
-// Real-time preview update function
-function updatePreview() {
-    console.log('Updating preview with current values');
+function setupBusinessCardLayout() {
+    console.log('Setting up business card layout');
     
-    // Get form input values
+    const preview = document.querySelector('.announcement-preview');
+    const content = preview?.querySelector('.announcement-content');
+    const title = preview?.querySelector('.announcement-title');
+    const header = preview?.querySelector('.announcement-header');
+    const logo = preview?.querySelector('.announcement-logo');
+    const footer = preview?.querySelector('.announcement-footer');
+    
+    if (!preview || !content || !title || !header || !logo || !footer) {
+        console.error('Required elements not found for business card layout');
+        return;
+    }
+    
+    // Store original state
+    const originalContent = content.innerHTML;
+    const originalStyles = {
+        preview: preview.style.cssText,
+        content: content.style.cssText,
+        header: header.style.cssText,
+        footer: footer.style.cssText
+    };
+    
+    try {
+        // Create a professional business card layout
+        
+        // First, adjust the container to have proper business card dimensions
+        preview.style.maxWidth = '600px';
+        preview.style.margin = '0 auto';
+        preview.style.aspectRatio = '1.7777 / 1'; // 16:9 aspect ratio
+        preview.style.display = 'flex';
+        preview.style.flexDirection = 'column';
+        preview.style.boxShadow = '0 20px 50px rgba(0,0,0,0.1)';
+        preview.style.position = 'relative';
+        preview.style.transition = 'transform 0.3s ease, box-shadow 0.3s ease';
+        preview.style.overflow = 'hidden';
+        
+        // Add a subtle hover effect
+        preview.addEventListener('mouseover', function() {
+            this.style.transform = 'rotateY(5deg) rotateX(2deg)';
+            this.style.boxShadow = '0 30px 60px rgba(0,0,0,0.15)';
+        });
+        
+        preview.addEventListener('mouseout', function() {
+            this.style.transform = 'rotateY(0) rotateX(0)';
+            this.style.boxShadow = '0 20px 50px rgba(0,0,0,0.1)';
+        });
+        
+        // Add a decorative pattern to the background
+        const patternOverlay = document.createElement('div');
+        patternOverlay.className = 'business-card-pattern layout-element';
+        patternOverlay.style.position = 'absolute';
+        patternOverlay.style.top = '0';
+        patternOverlay.style.left = '0';
+        patternOverlay.style.width = '100%';
+        patternOverlay.style.height = '100%';
+        patternOverlay.style.opacity = '0.03';
+        patternOverlay.style.pointerEvents = 'none';
+        patternOverlay.style.backgroundImage = 'radial-gradient(circle at 2px 2px, var(--primary-color) 1px, transparent 0)';
+        patternOverlay.style.backgroundSize = '20px 20px';
+        patternOverlay.style.zIndex = '0';
+        
+        // Add colors strip on the side
+        const colorStrip = document.createElement('div');
+        colorStrip.className = 'business-card-color-strip layout-element';
+        colorStrip.style.position = 'absolute';
+        colorStrip.style.top = '0';
+        colorStrip.style.left = '0';
+        colorStrip.style.width = '15px';
+        colorStrip.style.height = '100%';
+        colorStrip.style.background = `linear-gradient(to bottom, 
+            var(--primary-color), 
+            var(--secondary-color),
+            var(--accent-color))`;
+        colorStrip.style.zIndex = '1';
+        
+        // Enhanced header styling
+        header.style.display = 'flex';
+        header.style.justifyContent = 'space-between';
+        header.style.alignItems = 'center';
+        header.style.padding = '30px 30px 20px 45px'; // Extra padding left due to color strip
+        header.style.position = 'relative';
+        header.style.zIndex = '2';
+        
+        // Enhance logo styling
+        logo.style.width = '70px';
+        logo.style.height = '70px';
+        logo.style.borderRadius = '50%';
+        logo.style.display = 'flex';
+        logo.style.alignItems = 'center';
+        logo.style.justifyContent = 'center';
+        logo.style.fontFamily = 'var(--heading-font, "Montserrat", sans-serif)';
+        logo.style.fontWeight = 'bold';
+        logo.style.fontSize = '1.8em';
+        logo.style.boxShadow = '0 8px 16px rgba(0,0,0,0.1)';
+        logo.style.border = '2px solid rgba(var(--primary-color-rgb), 0.1)';
+        
+        // Clear the content area and create a fresh layout
+        content.style.flexGrow = '1';
+        content.style.display = 'flex'; 
+        content.style.flexDirection = 'column';
+        content.style.justifyContent = 'center';
+        content.style.padding = '0 30px 0 45px'; // Extra padding left due to color strip
+        content.style.zIndex = '2';
+        content.style.position = 'relative';
+        
+        // Clean existing content and add properly styled elements
+        content.innerHTML = '';
+        
+        // Add tagline/role
+        const tagline = document.createElement('div');
+        tagline.className = 'business-card-tagline layout-element';
+        tagline.textContent = 'Professional Title / Role';
+        tagline.style.fontSize = '1.1em';
+        tagline.style.color = 'var(--accent-color)';
+        tagline.style.fontWeight = '500';
+        tagline.style.marginBottom = '10px';
+        tagline.style.opacity = '0.8';
+        
+        // Enhance title styling
+        title.style.fontSize = '1.8em';
+        title.style.fontWeight = 'bold';
+        title.style.margin = '0 0 5px 0';
+        title.style.fontFamily = 'var(--heading-font, "Montserrat", sans-serif)';
+        
+        // Add brief description
+        const description = document.createElement('p');
+        description.className = 'business-card-description layout-element';
+        description.textContent = 'Brief description or company slogan would go here. Just a sentence to describe services or expertise.';
+        description.style.fontSize = '0.95em';
+        description.style.lineHeight = '1.6';
+        description.style.opacity = '0.75';
+        description.style.margin = '15px 0';
+        
+        // Enhanced footer styling
+        footer.style.padding = '20px 30px 30px 45px'; // Extra padding left due to color strip
+        footer.style.borderTop = '1px solid rgba(var(--primary-color-rgb), 0.1)';
+        footer.style.display = 'flex';
+        footer.style.flexDirection = 'column';
+        footer.style.position = 'relative';
+        footer.style.zIndex = '2';
+        
+        // Contact info styling
+        const contactInfo = document.querySelector('.announcement-contact');
+        if (contactInfo) {
+            contactInfo.style.fontSize = '0.9em';
+            contactInfo.style.opacity = '0.8';
+            contactInfo.style.display = 'flex';
+            contactInfo.style.flexWrap = 'wrap';
+            contactInfo.style.gap = '10px 20px';
+        }
+        
+        // Add social media icons (as text for simplicity)
+        const socialMedia = document.createElement('div');
+        socialMedia.className = 'business-card-social layout-element';
+        socialMedia.style.display = 'flex';
+        socialMedia.style.gap = '15px';
+        socialMedia.style.marginTop = '15px';
+        
+        const socialIcons = [
+            { text: 'in', title: 'LinkedIn' },
+            { text: 'tw', title: 'Twitter' },
+            { text: 'fb', title: 'Facebook' },
+            { text: 'ig', title: 'Instagram' }
+        ];
+        
+        socialIcons.forEach(icon => {
+            const socialIcon = document.createElement('div');
+            socialIcon.className = 'social-icon layout-element';
+            socialIcon.textContent = icon.text;
+            socialIcon.title = icon.title;
+            socialIcon.style.width = '30px';
+            socialIcon.style.height = '30px';
+            socialIcon.style.borderRadius = '50%';
+            socialIcon.style.backgroundColor = 'var(--primary-color)';
+            socialIcon.style.color = 'white';
+            socialIcon.style.display = 'flex';
+            socialIcon.style.alignItems = 'center';
+            socialIcon.style.justifyContent = 'center';
+            socialIcon.style.fontSize = '0.75em';
+            socialIcon.style.fontWeight = 'bold';
+            socialIcon.style.cursor = 'pointer';
+            socialIcon.style.transition = 'all 0.2s ease';
+            
+            socialIcon.addEventListener('mouseover', function() {
+                this.style.transform = 'scale(1.1)';
+                this.style.backgroundColor = 'var(--secondary-color)';
+            });
+            
+            socialIcon.addEventListener('mouseout', function() {
+                this.style.transform = 'scale(1)';
+                this.style.backgroundColor = 'var(--primary-color)';
+            });
+            
+            socialMedia.appendChild(socialIcon);
+        });
+        
+        // Assemble the layout
+        content.appendChild(tagline);
+        content.appendChild(description);
+        footer.appendChild(socialMedia);
+        preview.prepend(patternOverlay);
+        preview.prepend(colorStrip);
+        
+        // Add responsive styling for mobile
+        if (!document.getElementById('business-card-responsive-style')) {
+            const style = document.createElement('style');
+            style.id = 'business-card-responsive-style';
+            style.textContent = `
+                @media (max-width: 500px) {
+                    .announcement-header {
+                        flex-direction: column;
+                        align-items: flex-start;
+                        gap: 15px;
+                        padding: 25px 20px 15px 30px !important;
+                    }
+                    
+                    .announcement-content {
+                        padding: 10px 20px 10px 30px !important;
+                    }
+                    
+                    .announcement-footer {
+                        padding: 15px 20px 25px 30px !important;
+                    }
+                    
+                    .business-card-social {
+                        margin-top: 10px !important;
+                    }
+                    
+                    .announcement-logo {
+                        width: 60px !important;
+                        height: 60px !important;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+        
+        console.log('Business card layout setup complete');
+    } catch (error) {
+        console.error('Error setting up business card layout:', error);
+        
+        // Restore original styles
+        preview.style.cssText = originalStyles.preview;
+        content.style.cssText = originalStyles.content;
+        header.style.cssText = originalStyles.header;
+        footer.style.cssText = originalStyles.footer;
+        
+        // Restore original content
+        content.innerHTML = originalContent;
+    }
+}
+
+// Make preview elements directly editable
+function makePreviewEditable() {
+    console.log('Making preview elements editable');
+    
+    // Get the elements that should be editable
     const titleEl = document.getElementById('announcementTitle');
     const contentEl = document.getElementById('announcementContent');
-    const dateEl = document.getElementById('announcementDate');
-    const logoEl = document.getElementById('announcementLogo');
     const signerNameEl = document.getElementById('announcementSignerName');
     const signerTitleEl = document.getElementById('announcementSignerTitle');
     const contactInfoEl = document.getElementById('announcementContactInfo');
+    const dateEl = document.getElementById('announcementDate');
     
-    const title = document.getElementById('titleInput')?.value;
-    const content = document.getElementById('contentInput')?.value;
-    const date = document.getElementById('dateInput')?.value;
-    const logoText = document.getElementById('logoTextInput')?.value || 'RB';
-    const signerName = document.getElementById('signerNameInput')?.value;
-    const signerTitle = document.getElementById('signerTitleInput')?.value;
-    const contactInfo = document.getElementById('contactInfoInput')?.value;
-
-    console.log('Input values:', { 
-        title, 
-        contentLength: content?.length,
-        date,
-        logoText, 
-        signerName, 
-        signerTitle, 
-        contactInfo 
-    });
-    
-    console.log('Preview elements found:', {
-        titleEl: !!titleEl,
-        contentEl: !!contentEl,
-        dateEl: !!dateEl,
-        logoEl: !!logoEl,
-        signerNameEl: !!signerNameEl,
-        signerTitleEl: !!signerTitleEl,
-        contactInfoEl: !!contactInfoEl
-    });
-
-    // Update text content in preview
-    if (title && titleEl) {
-        titleEl.textContent = title;
-        console.log('Updated title element');
-    }
-
-    if (content && contentEl) {
-        // Process content - convert newlines to paragraphs
-        const formattedContent = content
-            .split('\n\n')
-            .filter(para => para.trim() !== '')
-            .map(para => `<p>${para.replace(/\n/g, '<br>')}</p>`)
-            .join('');
-
-        console.log('Formatted content created with', formattedContent.length, 'characters');
+    // Make elements editable
+    if (titleEl) {
+        titleEl.contentEditable = 'true';
+        titleEl.classList.add('editable-element');
         
-        // Update content without disrupting layout styles
-        if (currentLayout === 'magazine-split') {
-            // Special handling for magazine-split layout
-            if (!contentEl.querySelector('.magazine-column-left')) {
-                contentEl.innerHTML = `<div class="magazine-column-left">${formattedContent}</div><div class="magazine-column-right"></div>`;
-                // Distribute paragraphs
-                setupMagazineSplitLayout();
-            } else {
-                // Update only the content in left column
-                const leftCol = contentEl.querySelector('.magazine-column-left');
-                leftCol.innerHTML = formattedContent;
-                setupMagazineSplitLayout();
+        // Sync changes back to form input
+        titleEl.addEventListener('blur', function() {
+            const titleInput = document.getElementById('titleInput');
+            if (titleInput) {
+                titleInput.value = this.textContent;
             }
-        } else if (currentLayout === 'grid') {
-            // Special handling for grid layout
-            contentEl.innerHTML = formattedContent;
-            setupGridLayout();
-        } else {
-            // Standard content update
-            contentEl.innerHTML = formattedContent;
-        }
-        console.log('Updated content element with current layout:', currentLayout);
+        });
     }
-
-    if (date && dateEl) {
-        const formattedDate = new Date(date).toLocaleDateString(
-            currentLanguage === 'assamese' ? 'as-IN' : 'en-US',
-            {year: 'numeric', month: 'long', day: 'numeric'}
-        );
-        dateEl.textContent = `Date: ${formattedDate}`;
-        console.log('Updated date element');
-    }
-
-    // Update logo text if no image is loaded
-    if (logoEl && !customLogoLoaded && logoText) {
-        logoEl.innerHTML = logoText;
-        console.log('Updated logo element');
-    }
-
-    // Update signer information
-    if (signerName && signerNameEl) {
-        signerNameEl.textContent = signerName;
-        console.log('Updated signer name element');
-    }
-
-    if (signerTitle && signerTitleEl) {
-        signerTitleEl.textContent = signerTitle;
-        console.log('Updated signer title element');
-    }
-
-    if (contactInfo && contactInfoEl) {
-        contactInfoEl.textContent = contactInfo;
-        console.log('Updated contact info element');
-    }
-
-    // Update theme colors
-    const primaryColor = document.querySelector('[data-target="primary"]')?.value;
-    const secondaryColor = document.querySelector('[data-target="secondary"]')?.value;
-    const accentColor = document.querySelector('[data-target="accent"]')?.value;
-
-    if (primaryColor) document.documentElement.style.setProperty('--primary-color', primaryColor);
-    if (secondaryColor) document.documentElement.style.setProperty('--secondary-color', secondaryColor);
-    if (accentColor) document.documentElement.style.setProperty('--accent-color', accentColor);
-
-    // Update RGB variables for shadow effects
-    const primaryRgb = hexToRgb(primaryColor);
-    const secondaryRgb = hexToRgb(secondaryColor);
-    const accentRgb = hexToRgb(accentColor);
-
-    if (primaryRgb) document.documentElement.style.setProperty('--primary-color-rgb', primaryRgb);
-    if (secondaryRgb) document.documentElement.style.setProperty('--secondary-color-rgb', secondaryRgb);
-    if (accentRgb) document.documentElement.style.setProperty('--accent-color-rgb', accentRgb);
     
-    console.log('Preview update completed');
-}
-
-// Handle logo upload
-function handleLogoUpload(event) {
-    const file = event.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const logoEl = document.getElementById('announcementLogo');
-            if (logoEl) {
-                logoEl.innerHTML = `<img src="${e.target.result}" alt="Logo">`;
-                logoEl.classList.add('has-image');
-                customLogoLoaded = true;
+    if (contentEl) {
+        contentEl.contentEditable = 'true';
+        contentEl.classList.add('editable-element');
+        
+        // Sync changes back to form input
+        contentEl.addEventListener('blur', function() {
+            const contentInput = document.getElementById('contentInput');
+            if (contentInput) {
+                // Convert HTML to plain text with line breaks
+                let content = this.innerHTML
+                    .replace(/<p>/g, '')
+                    .replace(/<\/p>/g, '\n\n')
+                    .replace(/<br>/g, '\n')
+                    .replace(/<div>/g, '')
+                    .replace(/<\/div>/g, '\n');
+                
+                // Clean up extra whitespace
+                content = content.replace(/\n{3,}/g, '\n\n').trim();
+                
+                contentInput.value = content;
             }
-        };
-        reader.readAsDataURL(file);
-    }
-}
-
-// Toggle between languages
-function toggleLanguage(language) {
-    const contentInput = document.getElementById('contentInput');
-    const titleInput = document.getElementById('titleInput');
-    
-    // Add or remove Assamese font class based on selected language
-    if (language === 'assamese') {
-        contentInput.classList.add('assamese-text');
-        titleInput.classList.add('assamese-text');
-        document.getElementById('announcementContent').classList.add('assamese-text');
-        document.getElementById('announcementTitle').classList.add('assamese-text');
-    } else {
-        contentInput.classList.remove('assamese-text');
-        titleInput.classList.remove('assamese-text');
-        document.getElementById('announcementContent').classList.remove('assamese-text');
-        document.getElementById('announcementTitle').classList.remove('assamese-text');
+        });
     }
     
-    // Update preview to refresh date format
-    updatePreview();
-}
-
-// Download announcement as PNG
-async function downloadAsPng() {
-    showLoading();
+    if (signerNameEl) {
+        signerNameEl.contentEditable = 'true';
+        signerNameEl.classList.add('editable-element');
+        
+        // Sync changes back to form input
+        signerNameEl.addEventListener('blur', function() {
+            const signerNameInput = document.getElementById('signerNameInput');
+            if (signerNameInput) {
+                signerNameInput.value = this.textContent;
+            }
+        });
+    }
     
-    try {
-        const previewEl = document.querySelector('.announcement-preview');
+    if (signerTitleEl) {
+        signerTitleEl.contentEditable = 'true';
+        signerTitleEl.classList.add('editable-element');
         
-        if (!previewEl) {
-            throw new Error('Preview element not found');
-        }
+        // Sync changes back to form input
+        signerTitleEl.addEventListener('blur', function() {
+            const signerTitleInput = document.getElementById('signerTitleInput');
+            if (signerTitleInput) {
+                signerTitleInput.value = this.textContent;
+            }
+        });
+    }
+    
+    if (contactInfoEl) {
+        contactInfoEl.contentEditable = 'true';
+        contactInfoEl.classList.add('editable-element');
         
-        // Hide debug elements temporarily
-        const debugPanel = document.getElementById('debugInfo');
-        const debugVisible = debugPanel && window.getComputedStyle(debugPanel).display !== 'none';
-        if (debugVisible) {
-            debugPanel.style.display = 'none';
-        }
+        // Sync changes back to form input
+        contactInfoEl.addEventListener('blur', function() {
+            const contactInfoInput = document.getElementById('contactInfoInput');
+            if (contactInfoInput) {
+                contactInfoInput.value = this.textContent;
+            }
+        });
+    }
+    
+    if (dateEl) {
+        dateEl.contentEditable = 'true';
+        dateEl.classList.add('editable-element');
         
-        // Temporarily hide pseudo-elements with template and layout names
-        const tempStyle = document.createElement('style');
-        tempStyle.id = 'temp-hide-debug';
-        tempStyle.innerHTML = `
-            [class*="template-"]::before, [class*="layout-"]::after {
-                display: none !important;
+        // No direct sync for date since format differs, but we can store the edited value
+        dateEl.addEventListener('blur', function() {
+            // Store the value in a data attribute for now
+            this.dataset.customValue = this.textContent;
+        });
+    }
+    
+    // Add styling for editable elements if not already added
+    if (!document.getElementById('editable-elements-style')) {
+        const style = document.createElement('style');
+        style.id = 'editable-elements-style';
+        style.textContent = `
+            .editable-element {
+                position: relative;
+                outline: none;
+                transition: background-color 0.2s ease;
+            }
+            
+            .editable-element:hover {
+                background-color: rgba(var(--primary-color-rgb), 0.05);
+            }
+            
+            .editable-element:focus {
+                background-color: rgba(var(--primary-color-rgb), 0.1);
+            }
+            
+            .editable-element::after {
+                content: '✎';
+                position: absolute;
+                top: 0;
+                right: -20px;
+                font-size: 14px;
+                opacity: 0;
+                transition: opacity 0.2s ease;
+            }
+            
+            .editable-element:hover::after {
+                opacity: 0.5;
             }
         `;
-        document.head.appendChild(tempStyle);
-        
-        // Use html2canvas to capture the announcement
-        const canvas = await html2canvas(previewEl, {
-            scale: 2, // Higher quality
-            useCORS: true,
-            logging: false,
-            backgroundColor: '#ffffff'
-        });
-        
-        // Restore debug elements
-        if (debugVisible && debugPanel) {
-            debugPanel.style.display = 'block';
-        }
-        
-        // Remove temporary style
-        document.getElementById('temp-hide-debug')?.remove();
-        
-        // Convert to data URL and trigger download
-        const imageData = canvas.toDataURL('image/png');
-        const link = document.createElement('a');
-        link.href = imageData;
-        link.download = `announcement-${getCurrentDateString()}.png`;
-        link.click();
-        
-        showToast('Image downloaded successfully!');
-    } catch (error) {
-        console.error('Error generating PNG:', error);
-        showToast('Error generating image. Please try again.', true);
-    } finally {
-        hideLoading();
+        document.head.appendChild(style);
     }
+    
+    console.log('Preview elements are now editable');
 }
 
-// Download announcement as PDF
-async function downloadAsPdf() {
-    showLoading();
-    
-    try {
-        const previewEl = document.querySelector('.announcement-preview');
-        
-        if (!previewEl) {
-            throw new Error('Preview element not found');
-        }
-        
-        // Hide debug elements temporarily
-        const debugPanel = document.getElementById('debugInfo');
-        const debugVisible = debugPanel && window.getComputedStyle(debugPanel).display !== 'none';
-        if (debugVisible) {
-            debugPanel.style.display = 'none';
-        }
-        
-        // Temporarily hide pseudo-elements with template and layout names
-        const tempStyle = document.createElement('style');
-        tempStyle.id = 'temp-hide-debug';
-        tempStyle.innerHTML = `
-            [class*="template-"]::before, [class*="layout-"]::after {
-                display: none !important;
-            }
-        `;
-        document.head.appendChild(tempStyle);
-        
-        // Use html2canvas to capture the announcement
-        const canvas = await html2canvas(previewEl, {
-            scale: 2, // Higher quality
-            useCORS: true,
-            logging: false,
-            backgroundColor: '#ffffff'
-        });
-        
-        // Restore debug elements
-        if (debugVisible && debugPanel) {
-            debugPanel.style.display = 'block';
-        }
-        
-        // Remove temporary style
-        document.getElementById('temp-hide-debug')?.remove();
-        
-        // Check if jspdf is available
-        if (typeof jspdf === 'undefined' || !jspdf.jsPDF) {
-            // Fallback to downloadAsPng if jsPDF not available
-            console.warn('jsPDF not available, falling back to PNG download');
-            downloadAsPng();
-            return;
-        }
-        
-        const imgData = canvas.toDataURL('image/png');
-        const pdf = new jspdf.jsPDF({
-            orientation: 'portrait',
-            unit: 'mm',
-            format: 'a4'
-        });
-        
-        // Calculate dimensions to fit PDF
-        const imgWidth = 210; // A4 width in mm
-        const imgHeight = (canvas.height * imgWidth) / canvas.width;
-        
-        pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-        pdf.save(`announcement-${getCurrentDateString()}.pdf`);
-        
-        showToast('PDF downloaded successfully!');
-    } catch (error) {
-        console.error('Error generating PDF:', error);
-        showToast('Error generating PDF. Please try again.', true);
-    } finally {
-        hideLoading();
-    }
-}
-
-// Helper to format current date for filenames
-function getCurrentDateString() {
-    const date = new Date();
-    return date.toISOString().slice(0, 10);
-}
-
-// Helper to convert hex to RGB
-function hexToRgb(hex) {
-    if (!hex) return null;
-    
-    // Remove # if present
-    hex = hex.replace('#', '');
-    
-    // Convert 3-digit hex to 6-digit
-    if (hex.length === 3) {
-        hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
-    }
-    
-    // Parse the hex values
-    const r = parseInt(hex.substring(0, 2), 16);
-    const g = parseInt(hex.substring(2, 4), 16);
-    const b = parseInt(hex.substring(4, 6), 16);
-    
-    return `${r}, ${g}, ${b}`;
-}
-
-// Initialize premium features
-function initializePremiumFeatures() {
-    // Add premium badge to template options with data-premium attribute
-    const premiumItems = document.querySelectorAll('[data-premium="true"]');
-    
-    premiumItems.forEach(item => {
-        // Skip if already has a premium badge
-        if (item.querySelector('.premium-badge')) return;
-        
-        const badge = document.createElement('span');
-        badge.className = 'premium-badge';
-        badge.textContent = 'PREMIUM';
-        item.appendChild(badge);
-        
-        // Add click handler for premium features
-        if (!item.hasAttribute('data-handler-attached')) {
-            item.setAttribute('data-handler-attached', 'true');
-            
-            item.addEventListener('click', function(e) {
-                // If not premium, show the premium modal
-                if (!isPremium) {
-                    e.preventDefault();
-                    const premiumModal = document.getElementById('premium-modal');
-                    if (premiumModal) {
-                        premiumModal.style.display = 'flex';
-                    }
-                    return false;
-                }
-                return true;
-            });
-        }
-    });
-    
-    // Setup premium modal
-    const unlockPremiumBtn = document.getElementById('unlock-premium');
-    const confirmPremiumBtn = document.getElementById('confirm-premium');
-    const premiumModal = document.getElementById('premium-modal');
-    const closeButtons = document.querySelectorAll('.close-modal');
-    
-    if (unlockPremiumBtn) {
-        unlockPremiumBtn.addEventListener('click', function() {
-            if (premiumModal) {
-                premiumModal.style.display = 'flex';
-            }
-        });
-    }
-    
-    if (confirmPremiumBtn) {
-        confirmPremiumBtn.addEventListener('click', function() {
-            // Simulate successful purchase
-            isPremium = true;
-            
-            // Show premium badge in the preview
-            const premiumStatus = document.getElementById('premium-status');
-            if (premiumStatus) {
-                premiumStatus.style.display = 'inline-block';
-            }
-            
-            // Remove overlays from premium template and layout options
-            const premiumOptions = document.querySelectorAll('[data-premium="true"]');
-            premiumOptions.forEach(option => {
-                option.style.opacity = '1';
-                const overlay = option.querySelector('.premium-overlay');
-                if (overlay) overlay.remove();
-            });
-            
-            // Close modal
-            if (premiumModal) {
-                premiumModal.style.display = 'none';
-            }
-            
-            // Show success message
-            showToast('Premium features unlocked successfully!');
-            
-            // Remove premium section from controls
-            const premiumSection = document.querySelector('.premium-section');
-            if (premiumSection) {
-                premiumSection.style.display = 'none';
-            }
-        });
-    }
-    
-    // Close modal buttons
-    if (closeButtons) {
-        closeButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                if (premiumModal) {
-                    premiumModal.style.display = 'none';
-                }
-            });
-        });
-    }
-    
-    // Close modal when clicking outside
-    window.addEventListener('click', function(event) {
-        if (event.target === premiumModal) {
-            premiumModal.style.display = 'none';
-        }
-    });
-}
-
-// Update debug info panel
+// Update debug information panel
 function updateDebugInfo() {
     const debugPanel = document.getElementById('debugInfo');
     if (!debugPanel) return;
     
-    // Update every second
-    const updateInterval = setInterval(() => {
-        const preview = document.querySelector('.announcement-preview');
-        if (preview) {
-            const classList = preview.classList.value;
-            const styles = preview.getAttribute('style') || 'No inline styles';
-            
-            debugPanel.innerHTML = `
-                <strong>Current Template:</strong> ${currentTemplate}<br>
-                <strong>Current Layout:</strong> ${currentLayout}<br>
-                <strong>Preview Class List:</strong> ${classList}<br>
-                <strong>Inline Styles:</strong> ${styles}
-            `;
-        } else {
-            debugPanel.innerHTML = 'Preview element not found';
-        }
-    }, 1000);
+    // Get current state information
+    const templateInfo = document.getElementById('templateSelector')?.value || currentTemplate;
+    const layoutInfo = document.getElementById('layoutSelector')?.value || currentLayout;
+    const languageInfo = currentLanguage;
     
-    // Clean up when page is unloaded
-    window.addEventListener('beforeunload', () => {
-        clearInterval(updateInterval);
-    });
+    // Get color information
+    const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim();
+    const secondaryColor = getComputedStyle(document.documentElement).getPropertyValue('--secondary-color').trim();
+    const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent-color').trim();
+    
+    // Update debug panel content
+    debugPanel.innerHTML = `
+        <h3>Debug Info</h3>
+        <p><strong>Template:</strong> ${templateInfo}</p>
+        <p><strong>Layout:</strong> ${layoutInfo}</p>
+        <p><strong>Language:</strong> ${languageInfo}</p>
+        <p><strong>Colors:</strong> 
+           <span style="color:${primaryColor}">■</span> 
+           <span style="color:${secondaryColor}">■</span> 
+           <span style="color:${accentColor}">■</span>
+        </p>
+        <p><strong>Premium:</strong> ${isPremium ? 'Enabled' : 'Disabled'}</p>
+    `;
 }
 
-// Get current form data
-function getCurrentFormData() {
-    console.log('Getting current form data');
+// Toggle language between English and Assamese
+function toggleLanguage(language) {
+    console.log('Toggling language to:', language);
     
-    // Collect all form data
-    const data = {
-        template: currentTemplate,
-        layout: currentLayout,
-        language: currentLanguage,
-        title: document.getElementById('titleInput')?.value || '',
-        content: document.getElementById('contentInput')?.value || '',
-        date: document.getElementById('dateInput')?.value || '',
-        signerName: document.getElementById('signerNameInput')?.value || '',
-        signerTitle: document.getElementById('signerTitleInput')?.value || '',
-        contactInfo: document.getElementById('contactInfoInput')?.value || '',
-        logoText: document.getElementById('logoTextInput')?.value || '',
-        colors: {
-            primary: document.getElementById('primaryColor')?.value || '#2a3b4c',
-            secondary: document.getElementById('secondaryColor')?.value || '#ce8e2c',
-            accent: document.getElementById('accentColor')?.value || '#134e65'
+    // Update UI elements based on language
+    if (language === 'assamese') {
+        // Assamese translations
+        const translations = {
+            'Date:': 'তাৰিখ:',
+            'Director': 'সঞ্চালক',
+            'Email:': 'ই-মেইল:',
+            'Phone:': 'ফোন:',
+        };
+        
+        // Update date label
+        const dateEl = document.getElementById('announcementDate');
+        if (dateEl) {
+            let dateText = dateEl.textContent;
+            dateText = dateText.replace('Date:', translations['Date:']);
+            dateEl.textContent = dateText;
         }
-    };
-    
-    // Get selected color theme name if available
-    const selectedTheme = document.querySelector('.color-option.selected');
-    if (selectedTheme) {
-        data.colorTheme = selectedTheme.getAttribute('data-theme');
-    }
-    
-    // Add metadata
-    data.exportDate = new Date().toISOString();
-    data.version = "2.0";
-    
-    console.log('Form data collected:', data);
-    return data;
-}
-
-// Setup glassmorphism floating elements
-function setupGlassmorphismEffect() {
-    const previews = document.querySelectorAll('.template-glassmorphism .announcement-preview');
-    
-    previews.forEach(preview => {
-        // Remove any existing floating circles first
-        const existingCircles = preview.querySelectorAll('.floating-circle');
-        existingCircles.forEach(circle => circle.remove());
         
-        // Get theme colors for gradients
-        const computedStyle = getComputedStyle(document.documentElement);
-        const primaryColor = computedStyle.getPropertyValue('--primary-color').trim();
-        const secondaryColor = computedStyle.getPropertyValue('--secondary-color').trim();
-        const accentColor = computedStyle.getPropertyValue('--accent-color').trim();
+        // Update signer title if it matches a translation
+        const signerTitleEl = document.getElementById('announcementSignerTitle');
+        if (signerTitleEl && translations[signerTitleEl.textContent]) {
+            signerTitleEl.textContent = translations[signerTitleEl.textContent];
+        }
         
-        // Create floating circles
-        for (let i = 0; i < 3; i++) {
-            const circle = document.createElement('div');
-            circle.classList.add('floating-circle');
-            
-            // Apply random sizes, positions and durations
-            const size = 80 + Math.random() * 100;
-            circle.style.width = `${size}px`;
-            circle.style.height = `${size}px`;
-            
-            // Position circles
-            if (i === 0) {
-                circle.style.top = '-30px';
-                circle.style.right = '-30px';
-            } else if (i === 1) {
-                circle.style.bottom = '50px';
-                circle.style.left = '-20px';
-            } else {
-                circle.style.bottom = '-20px';
-                circle.style.right = '30%';
+        // Update contact info
+        const contactInfoEl = document.getElementById('announcementContactInfo');
+        if (contactInfoEl) {
+            let contactText = contactInfoEl.textContent;
+            Object.keys(translations).forEach(key => {
+                contactText = contactText.replace(key, translations[key]);
+            });
+            contactInfoEl.textContent = contactText;
+        }
+        
+        // Update form labels
+        document.querySelectorAll('label').forEach(label => {
+            const originalText = label.getAttribute('data-original-text') || label.textContent;
+            if (!label.getAttribute('data-original-text')) {
+                label.setAttribute('data-original-text', originalText);
             }
             
-            // Add animation with different durations
-            const duration = 12 + (i * 3);
-            circle.style.animation = `float ${duration}s infinite ease-in-out`;
-            circle.style.animationDelay = `${-i * 4}s`;
-            circle.style.opacity = (0.8 - (i * 0.1)).toString();
+            // Translate label text if available in translations
+            if (translations[originalText]) {
+                label.textContent = translations[originalText];
+            }
+        });
+        
+    } else {
+        // Revert to English
+        
+        // Restore original form labels
+        document.querySelectorAll('label[data-original-text]').forEach(label => {
+            label.textContent = label.getAttribute('data-original-text');
+        });
+        
+        // Update date label
+        const dateEl = document.getElementById('announcementDate');
+        if (dateEl) {
+            let dateText = dateEl.textContent;
+            dateText = dateText.replace('তাৰিখ:', 'Date:');
+            dateEl.textContent = dateText;
+        }
+    }
+    
+    console.log('Language toggle complete');
+}
+
+// Setup glassmorphism effect
+function setupGlassmorphismEffect() {
+    console.log('Setting up glassmorphism effect');
+    
+    const preview = document.querySelector('.announcement-preview');
+    if (!preview) return;
+    
+    // Add orbs/bubbles for glassmorphism effect
+    const colors = [
+        'var(--primary-color)',
+        'var(--secondary-color)',
+        'var(--accent-color)'
+    ];
+    
+    // Remove existing orbs if any
+    const existingOrbs = preview.querySelectorAll('.glassmorphism-orb');
+    existingOrbs.forEach(orb => orb.remove());
+    
+    // Create new orbs
+    for (let i = 0; i < 5; i++) {
+        const orb = document.createElement('div');
+        orb.className = 'glassmorphism-orb';
+        orb.style.position = 'absolute';
+        orb.style.borderRadius = '50%';
+        orb.style.background = colors[i % colors.length];
+        
+        // Random size between 50px and 150px
+        const size = Math.floor(Math.random() * 100) + 50;
+        orb.style.width = `${size}px`;
+        orb.style.height = `${size}px`;
+        
+        // Random position
+        orb.style.top = `${Math.floor(Math.random() * 100)}%`;
+        orb.style.left = `${Math.floor(Math.random() * 100)}%`;
+        
+        // Make it blurry and transparent
+        orb.style.filter = 'blur(40px)';
+        orb.style.opacity = '0.15';
+        orb.style.zIndex = '0';
+        orb.style.transform = 'translate(-50%, -50%)';
+        orb.style.pointerEvents = 'none';
+        
+        preview.appendChild(orb);
+    }
+    
+    // Add subtle animation to orbs if not already added
+    if (!document.getElementById('glassmorphism-animation')) {
+        const style = document.createElement('style');
+        style.id = 'glassmorphism-animation';
+        style.textContent = `
+            @keyframes float {
+                0% { transform: translate(-50%, -50%); }
+                50% { transform: translate(-50%, -60%); }
+                100% { transform: translate(-50%, -50%); }
+            }
             
-            preview.appendChild(circle);
+            .glassmorphism-orb {
+                animation: float 15s ease-in-out infinite;
+                animation-delay: var(--delay, 0s);
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // Add different animation delays to each orb
+        const orbs = preview.querySelectorAll('.glassmorphism-orb');
+        orbs.forEach((orb, index) => {
+            orb.style.setProperty('--delay', `${index * 2}s`);
+        });
+    }
+    
+    console.log('Glassmorphism effect setup complete');
+}
+
+// Add setup functions for the missing layouts
+function setupCenteredLayout() {
+    console.log('Setting up centered layout');
+    
+    const preview = document.querySelector('.announcement-preview');
+    const content = preview?.querySelector('.announcement-content');
+    
+    if (!preview || !content) {
+        console.error('Preview or content elements not found for centered layout');
+        return;
+    }
+    
+    // Store original styles
+    const originalStyles = {
+        content: content.style.cssText
+    };
+    
+    try {
+        // Center-align text throughout the announcement
+        content.style.textAlign = 'center';
+        content.style.margin = '0 auto';
+        content.style.maxWidth = '90%';
+        
+        // Add a subtle divider
+        const divider = document.createElement('div');
+        divider.className = 'centered-divider layout-element';
+        divider.style.width = '50%';
+        divider.style.height = '2px';
+        divider.style.backgroundColor = 'var(--secondary-color)';
+        divider.style.margin = '20px auto';
+        divider.style.opacity = '0.5';
+        
+        // Add divider after first paragraph if any
+        const firstParagraph = content.querySelector('p');
+        if (firstParagraph && firstParagraph.nextSibling) {
+            content.insertBefore(divider, firstParagraph.nextSibling);
+        } else {
+            content.appendChild(divider);
         }
         
-        // Set preview styles if needed
-        preview.style.position = 'relative';
+        console.log('Centered layout setup complete');
+    } catch (error) {
+        console.error('Error setting up centered layout:', error);
+        // Restore original styles
+        content.style.cssText = originalStyles.content;
+    }
+}
+
+function setupCardLayout() {
+    console.log('Setting up card layout');
+    
+    const preview = document.querySelector('.announcement-preview');
+    const content = preview?.querySelector('.announcement-content');
+    
+    if (!preview || !content) {
+        console.error('Preview or content elements not found for card layout');
+        return;
+    }
+    
+    // Store original content for possible restoration
+    const originalContent = content.innerHTML;
+    
+    try {
+        // Create a card-style layout
+        preview.style.maxWidth = '600px';
+        preview.style.margin = '0 auto';
+        preview.style.boxShadow = '0 10px 30px rgba(0,0,0,0.15)';
+        preview.style.borderRadius = '8px';
         preview.style.overflow = 'hidden';
-    });
-} 
+        
+        // Enhance content with card styling
+        content.style.padding = '20px';
+        
+        // Add a subtle highlight bar at the top
+        const highlightBar = document.createElement('div');
+        highlightBar.className = 'card-highlight-bar layout-element';
+        highlightBar.style.height = '6px';
+        highlightBar.style.width = '100%';
+        highlightBar.style.backgroundColor = 'var(--secondary-color)';
+        highlightBar.style.position = 'relative';
+        
+        // Add to the top of the preview
+        if (preview.firstChild) {
+            preview.insertBefore(highlightBar, preview.firstChild);
+        } else {
+            preview.appendChild(highlightBar);
+        }
+        
+        console.log('Card layout setup complete');
+    } catch (error) {
+        console.error('Error setting up card layout:', error);
+        // Restore original content
+        content.innerHTML = originalContent;
+    }
+}
