@@ -282,6 +282,29 @@ const templates = {
             stamp: true,
             decorativeBorders: true
         }
+    },
+    retro: {
+        name: 'Retro',
+        fonts: [
+            'Press Start 2P',
+            'Montserrat'
+        ],
+        colors: {
+            primary: '#ff0060',
+            secondary: '#f4ea00',
+            accent: '#00d9ff'
+        },
+        styles: {
+            background: '#fffbe0',
+            padding: '40px',
+            border: '4px dotted #ff0060',
+            borderRadius: '0',
+            boxShadow: '0 10px 20px rgba(0,0,0,0.2)',
+            position: 'relative'
+        },
+        effects: {
+            pixelBorder: true
+        }
     }
 };
 
@@ -410,6 +433,11 @@ const layouts = {
         name: 'Card Grid',
         className: 'layout-card-grid',
         description: 'Grid of cards with image upload capability'
+    },
+    'poster': {
+        name: 'Poster',
+        className: 'layout-poster',
+        description: 'Large announcement with centered elements'
     }
 };
 
