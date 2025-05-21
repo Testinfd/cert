@@ -16,6 +16,7 @@ A versatile and powerful web application for creating professional announcements
   - Gradient
   - Brutalist
   - Glassmorphism
+  - Retro
 
 - **Premium Templates**:
   - 3D Effect
@@ -35,6 +36,7 @@ A versatile and powerful web application for creating professional announcements
   - Magazine Split
   - Grid
   - Hero
+  - Poster
 
 ### Additional Features
 - **Preset Content**: Quickly start with pre-defined templates for common announcements (Event, Meeting, General, Holiday, and Achievement)
@@ -115,7 +117,6 @@ The Announcement Generator works with all modern browsers including:
 - `js/export.js` - Export functionality (PNG, PDF, JSON)
 - `js/main.js` - Core application functionality
 - `images/` - Image assets
-- `img/` - Additional image assets
 
 ## License
 
@@ -126,6 +127,12 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - Fonts provided by Google Fonts
 - Icons and design inspiration from various open-source projects
 - html2canvas and jsPDF libraries
+
+
+## Roadmap
+- Add support for additional generator types (posters, resumes, certificates)
+- Improve mobile responsiveness across templates
+
 
 ---
 

@@ -1724,6 +1724,47 @@ header .site-description {
     }
 }
 
+/* Retro Template */
+.template-retro .announcement-preview {
+    background-color: #fffbe0;
+    border: 4px dotted var(--secondary-color);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+    font-family: 'Press Start 2P', monospace;
+    color: var(--primary-color);
+    text-align: center;
+}
+
+.template-retro .announcement-title {
+    font-size: 24px;
+    color: var(--primary-color);
+    margin-bottom: 20px;
+}
+
+@media (max-width: 600px) {
+    .template-retro .announcement-preview { padding: 30px; }
+    .template-retro .announcement-title { font-size: 20px; }
+}
+
+/* Poster Layout */
+.layout-poster .announcement-preview {
+    text-align: center;
+    padding: 60px;
+}
+
+.layout-poster .announcement-header {
+    flex-direction: column;
+    margin-bottom: 30px;
+}
+
+.layout-poster .announcement-body {
+    text-align: left;
+}
+
+@media (max-width: 600px) {
+    .layout-poster .announcement-preview { padding: 40px 20px; }
+    .layout-poster .announcement-header { margin-bottom: 20px; }
+}
+
 /* Paper Template */
 .template-paper .announcement-preview {
     background-color: #f9f5e9;
